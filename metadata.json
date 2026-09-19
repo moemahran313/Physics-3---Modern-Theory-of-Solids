@@ -1,0 +1,6 @@
+{
+  "name": "Physics 3 RefLib",
+  "description": "Authoritative Student Cramming & Study Portal for Modern Academy Physics 3 (ELCN114 / ELC 214) with official tutorial sheets, mock exams, scientific keypad, video theater, and global equation sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    <linearGradient id="orbitGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+    <linearGradient id="orbitGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="40%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <rect width="510" height="510" x="1" y="1" rx="127" fill="none" stroke="#334155" stroke-width="2" />
+
+  <!-- Quantum / Atom Orbit 1 -->
+  <ellipse cx="256" cy="256" rx="190" ry="70" fill="none" stroke="url(#orbitGrad1)" stroke-width="8" opacity="0.85" filter="url(#glow)" transform="rotate(0 256 256)" />
+  <!-- Quantum / Atom Orbit 2 -->
+  <ellipse cx="256" cy="256" rx="190" ry="70" fill="none" stroke="url(#orbitGrad2)" stroke-width="8" opacity="0.85" filter="url(#glow)" transform="rotate(60 256 256)" />
+  <!-- Quantum / Atom Orbit 3 -->
+  <ellipse cx="256" cy="256" rx="190" ry="70" fill="none" stroke="url(#orbitGrad1)" stroke-width="8" opacity="0.85" filter="url(#glow)" transform="rotate(120 256 256)" />
+
+  <!-- Orbiting particles -->
+  <circle cx="446" cy="256" r="10" fill="#38bdf8" filter="url(#glow)" />
+  <circle cx="161" cy="420" r="10" fill="#a855f7" filter="url(#glow)" />
+  <circle cx="161" cy="92" r="10" fill="#818cf8" filter="url(#glow)" />
+
+  <!-- Core Nucleus Glowing -->
+  <circle cx="256" cy="256" r="46" fill="url(#coreGlow)" />
+  <circle cx="256" cy="256" r="24" fill="#ffffff" filter="url(#glow)" />
+
+  <!-- Small course badge or Greek letter psi or h-bar symbol subtly embedded -->
+  <text x="256" y="475" text-anchor="middle" font-family="ui-monospace, monospace" font-size="22" font-weight="700" fill="#94a3b8" letter-spacing="3">PHYSICS 3 REFLIB</text>
+</svg>
