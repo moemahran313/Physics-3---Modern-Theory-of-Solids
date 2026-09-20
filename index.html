@@ -20,6 +20,20 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 
+    <script>
+      // Filter benign Vite HMR websocket disconnection log in AI Studio environment
+      (function() {
+        var origConsoleError = console.error;
+        console.error = function() {
+          var firstArg = arguments[0];
+          if (typeof firstArg === 'string' && (firstArg.indexOf('[vite] failed to connect to websocket') !== -1 || firstArg.indexOf('vite-plugin-pwa:dev-ready') !== -1)) {
+            return;
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+      })();
+    </script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-indigo-600 selection:text-white">

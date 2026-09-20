@@ -150,10 +150,10 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Primary Header Row */}
       <div className="px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: Mobile/Desktop Toggle & Breadcrumb */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
           <button
             onClick={onToggleSidebar}
-            className="p-2 sm:p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 shrink-0"
             title="Toggle Navigation Menu"
             aria-label="Toggle navigation menu"
           >
@@ -171,15 +171,15 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Breadcrumb on tablet/desktop */}
-          <div className="hidden sm:block min-w-0">
+          <div className="hidden sm:block min-w-0 max-w-[140px] md:max-w-[200px] lg:max-w-[280px]">
             <span className="text-xs font-mono text-slate-400 truncate block">
               {getBreadcrumb(currentTab)}
             </span>
           </div>
         </div>
 
-        {/* Center: Global Instant Search Bar (Desktop) */}
-        <div ref={searchContainerRef} className="hidden sm:block relative flex-1 max-w-xl mx-2">
+        {/* Center: Global Instant Search Bar (Desktop 1024px+) */}
+        <div ref={searchContainerRef} className="hidden lg:block relative flex-1 max-w-md xl:max-w-xl mx-3 min-w-[200px]">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
             <input
@@ -343,10 +343,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Mobile Search Toggle Button */}
+          {/* Mobile & Tablet Search Toggle Button */}
           <button
             onClick={() => setIsMobileSearchActive(prev => !prev)}
-            className={`sm:hidden p-2.5 rounded-xl border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
+            className={`lg:hidden p-2 sm:p-2.5 rounded-xl border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
               isMobileSearchActive
                 ? "bg-indigo-600 text-white border-indigo-500"
                 : "bg-slate-900 border-slate-800 text-slate-300 active:bg-slate-800"
@@ -367,27 +367,27 @@ export const Header: React.FC<HeaderProps> = ({
             title="Physical Constants Reference"
             aria-label="Physical Constants Reference"
           >
-            <Hash className="w-4 h-4 text-indigo-400" />
-            <span className="hidden md:inline">Constants</span>
+            <Hash className="w-4 h-4 text-indigo-400 shrink-0" />
+            <span className="hidden xl:inline">Constants</span>
           </button>
 
           {/* Cramming Arena Quick Button */}
           <button
             onClick={() => onSelectTab("cramming-arena")}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-medium transition-colors min-h-[44px] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-medium transition-colors min-h-[44px] active:scale-95 whitespace-nowrap"
             title="Open Cramming Arena"
             aria-label="Open Cramming Arena"
           >
-            <Flame className="w-4 h-4 text-rose-400 animate-pulse" />
-            <span className="hidden sm:inline">Cramming Arena</span>
+            <Flame className="w-4 h-4 text-rose-400 animate-pulse shrink-0" />
+            <span className="hidden md:inline lg:hidden xl:inline">Cram Arena</span>
           </button>
 
-          {/* Discord Link (Desktop only) */}
+          {/* Discord Link (Large Desktop only) */}
           <a
             href="https://discord.gg/p6hkRbzFTn"
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:flex p-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
+            className="hidden xl:flex p-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
             title="Join Study Discord"
           >
             <ExternalLink className="w-4 h-4" />
@@ -395,9 +395,9 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Expandable Search Input for Mobile Phones */}
+      {/* Expandable Search Input for Mobile Phones & Tablets */}
       {isMobileSearchActive && (
-        <div className="sm:hidden px-3 pb-3 pt-1 border-t border-slate-800/80 bg-slate-950 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="lg:hidden px-3 pb-3 pt-1 border-t border-slate-800/80 bg-slate-950 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
             <input

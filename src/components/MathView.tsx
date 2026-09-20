@@ -53,64 +53,97 @@ export const MathView: React.FC<MathViewProps> = ({
   );
 };
 
+// Helper function to auto-wrap bare LaTeX expressions with $ if not already enclosed
+function normalizeMathText(text: string): string {
+  if (!text) return "";
+  
+  // If text already has $, trust the author
+  if (text.includes("$")) {
+    return text;
+  }
+
+  // If text contains TeX macros like \frac, \lambda, \to, \implies, etc. outside $,
+  // split on sentence boundaries or commas and identify math clauses
+  return text.replace(
+    /((?:[A-Za-z0-9_()+\-*/=^|.,\s]*\\[A-Za-z]+[A-Za-z0-9_()+\-*/=^|.,\s]*)+)/g,
+    (match) => {
+      const trimmed = match.trim();
+      // Only wrap if it contains a backslash command
+      if (trimmed.includes("\\") && trimmed.length > 1) {
+        return `$${trimmed}$`;
+      }
+      return match;
+    }
+  );
+}
+
 // Helper component that parses markdown containing $inline$ and $$block$$ math and regular text
 export const FormattedContent: React.FC<{ content: string; className?: string }> = ({
   content,
   className = "",
 }) => {
-  // Split on $$...$$ blocks first, then on $...$
   const renderedBlocks = useMemo(() => {
     if (!content) return null;
 
-    // Normalizing newlines
-    const lines = content.split("\n");
+    const normalized = normalizeMathText(content);
+    const lines = normalized.split("\n");
 
     return lines.map((line, lineIdx) => {
+      const trimmed = line.trim();
+
       // Check if line is header
-      if (line.startsWith("### ")) {
+      if (trimmed.startsWith("### ")) {
         return (
-          <h4 key={lineIdx} className="text-lg font-bold text-amber-300 mt-4 mb-2 flex items-center gap-2">
-            <span className="w-1.5 h-4 bg-amber-400 rounded-sm inline-block"></span>
-            {renderInlineMathText(line.replace("### ", ""))}
+          <h4 key={lineIdx} className="text-base sm:text-lg font-bold text-amber-300 mt-3 mb-1.5 flex items-center gap-2">
+            <span className="w-1.5 h-4 bg-amber-400 rounded-sm inline-block shrink-0"></span>
+            <span>{renderInlineMathText(trimmed.replace("### ", ""))}</span>
           </h4>
         );
       }
-      if (line.startsWith("#### ")) {
+      if (trimmed.startsWith("#### ")) {
         return (
-          <h5 key={lineIdx} className="text-base font-semibold text-sky-300 mt-3 mb-1.5 flex items-center gap-2">
-            <span className="w-1 h-3 bg-sky-400 rounded-sm inline-block"></span>
-            {renderInlineMathText(line.replace("#### ", ""))}
+          <h5 key={lineIdx} className="text-sm sm:text-base font-semibold text-sky-300 mt-2 mb-1 flex items-center gap-2">
+            <span className="w-1 h-3 bg-sky-400 rounded-sm inline-block shrink-0"></span>
+            <span>{renderInlineMathText(trimmed.replace("#### ", ""))}</span>
           </h5>
         );
       }
-      if (line.startsWith("## ")) {
+      if (trimmed.startsWith("## ")) {
         return (
-          <h3 key={lineIdx} className="text-xl font-bold text-indigo-300 mt-5 mb-3 border-b border-slate-700/60 pb-1">
-            {renderInlineMathText(line.replace("## ", ""))}
+          <h3 key={lineIdx} className="text-lg sm:text-xl font-bold text-indigo-300 mt-4 mb-2 border-b border-slate-700/60 pb-1">
+            {renderInlineMathText(trimmed.replace("## ", ""))}
           </h3>
         );
       }
 
       // Check if line is block math
-      if (line.trim().startsWith("$$") && line.trim().endsWith("$$") && line.trim().length > 4) {
-        return <MathView key={lineIdx} math={line.trim()} block={true} className="my-2 bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-800" />;
+      if (trimmed.startsWith("$$") && trimmed.endsWith("$$") && trimmed.length > 4) {
+        return (
+          <div key={lineIdx} className="my-2.5 p-3 sm:p-4 rounded-xl bg-slate-950/90 border border-slate-800/90 shadow-inner overflow-x-auto">
+            <MathView math={trimmed} block={true} />
+          </div>
+        );
       }
 
       // Bullet points
-      if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
+      if (trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+        const bulletText = trimmed.replace(/^[•\-*]\s+/, "");
         return (
-          <li key={lineIdx} className="ml-4 list-disc text-slate-300 leading-relaxed my-1">
-            {renderInlineMathText(line.trim().slice(2))}
-          </li>
+          <div key={lineIdx} className="flex items-start gap-2 text-slate-300 leading-relaxed my-1 pl-1 sm:pl-2">
+            <span className="text-indigo-400 font-bold mt-1 text-xs">•</span>
+            <div className="flex-1">
+              {renderInlineMathText(bulletText)}
+            </div>
+          </div>
         );
       }
 
       // Numbered lists
-      const numMatch = line.trim().match(/^(\d+)\.\s+(.*)$/);
+      const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
       if (numMatch) {
         return (
-          <div key={lineIdx} className="flex items-start gap-2.5 my-1.5 ml-2 text-slate-300">
-            <span className="flex-shrink-0 w-6 h-6 rounded bg-slate-800 border border-slate-700 text-xs font-semibold text-indigo-300 flex items-center justify-center">
+          <div key={lineIdx} className="flex items-start gap-2.5 my-1.5 ml-1 sm:ml-2 text-slate-300">
+            <span className="flex-shrink-0 w-5 h-5 rounded-md bg-indigo-900/40 border border-indigo-700/50 text-[11px] font-mono font-bold text-indigo-300 flex items-center justify-center mt-0.5">
               {numMatch[1]}
             </span>
             <div className="flex-1 leading-relaxed">
@@ -121,13 +154,13 @@ export const FormattedContent: React.FC<{ content: string; className?: string }>
       }
 
       // Blank line
-      if (!line.trim()) {
-        return <div key={lineIdx} className="h-2" />;
+      if (!trimmed) {
+        return <div key={lineIdx} className="h-1.5" />;
       }
 
       // Regular paragraph
       return (
-        <p key={lineIdx} className="my-1.5 text-slate-300 leading-relaxed text-sm md:text-base">
+        <p key={lineIdx} className="my-1 text-slate-300 leading-relaxed">
           {renderInlineMathText(line)}
         </p>
       );
@@ -137,8 +170,7 @@ export const FormattedContent: React.FC<{ content: string; className?: string }>
   return <div className={`space-y-1 ${className}`}>{renderedBlocks}</div>;
 };
 
-function renderInlineMathText(text: string): React.ReactNode[] {
-  // Regex to split on $...$ but avoid $$...$$
+export function renderInlineMathText(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   const regex = /(\$\$[\s\S]*?\$\$|\$[^\$]+?\$)/g;
   let lastIndex = 0;

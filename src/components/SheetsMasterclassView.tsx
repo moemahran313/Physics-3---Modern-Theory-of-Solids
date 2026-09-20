@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MasterclassSheet, MasterclassProblem, MasterclassTheoryItem } from "../types";
-import { MathView } from "./MathView";
+import { MathView, FormattedContent } from "./MathView";
 import { 
   BookOpen, 
   AlertTriangle, 
@@ -10,7 +10,8 @@ import {
   ChevronDown, 
   ChevronUp,
   FileCheck2,
-  Bookmark
+  Bookmark,
+  Sparkles
 } from "lucide-react";
 
 interface SheetsMasterclassViewProps {
@@ -213,43 +214,49 @@ interface TheoryCardProps {
 
 const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
   return (
-    <div className="mobile-optimized-card p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-colors flex flex-col justify-between space-y-3">
-      <div>
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-white">
+    <div className="mobile-optimized-card p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-3.5 h-full">
+      <div className="space-y-3">
+        {/* Title & Copy */}
+        <div className="flex items-start justify-between gap-2.5">
+          <h3 className="text-sm sm:text-base font-semibold text-white leading-snug">
             {item.title}
           </h3>
           <button
             onClick={() => onCopy(item.statement, item.id)}
-            className="p-1.5 rounded-lg bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800/80 transition-colors shrink-0"
+            className="p-1.5 rounded-lg bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800/80 transition-colors shrink-0 active:scale-95"
             title="Copy statement"
             aria-label="Copy statement"
           >
             {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <p className="text-xs text-slate-300 leading-relaxed mt-1.5">
-          {item.statement}
-        </p>
 
+        {/* Statement (With inline Math support) */}
+        <div className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+          <FormattedContent content={item.statement} />
+        </div>
+
+        {/* Official Proof / Derivation */}
         {item.proofOrDerivation && (
-          <div className="mt-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-slate-300 font-mono">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">
-              Official Proof / Derivation:
-            </span>
-            <div className="overflow-x-auto max-w-full pb-1">
-              <MathView math={item.proofOrDerivation} displayMode={false} />
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-950/90 border border-indigo-900/40 text-xs text-slate-200 space-y-2 shadow-inner">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-wider font-mono">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span>Official Proof / Derivation:</span>
+            </div>
+            <div className="overflow-x-auto max-w-full text-slate-300">
+              <FormattedContent content={item.proofOrDerivation} />
             </div>
           </div>
         )}
 
-        <div className="mt-3 space-y-1.5">
+        {/* Governing Equations */}
+        <div className="space-y-1.5 pt-1">
           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono block">
             Governing Equations:
           </span>
           <div className="space-y-1.5">
             {item.keyFormulas.map((formula, idx) => (
-              <div key={idx} className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto max-w-full">
+              <div key={idx} className="px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800/80 overflow-x-auto max-w-full">
                 <MathView math={formula} displayMode={true} />
               </div>
             ))}
@@ -257,9 +264,12 @@ const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
         </div>
       </div>
 
-      <div className="pt-2.5 border-t border-slate-800/70 flex items-center gap-1.5 text-[11px] text-amber-300 font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
-        <span>{item.takeaway}</span>
+      {/* Course Takeaway */}
+      <div className="mt-auto pt-3 border-t border-slate-800/80 flex items-start gap-2 text-[11px] sm:text-xs text-amber-300 font-medium leading-relaxed">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5"></span>
+        <div className="flex-1">
+          <FormattedContent content={item.takeaway} />
+        </div>
       </div>
     </div>
   );
@@ -318,11 +328,11 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
       {isExpanded && (
         <div className="p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs">
           {/* Statement */}
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 leading-relaxed text-xs sm:text-sm">
+          <div className="p-3 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 leading-relaxed text-xs sm:text-sm">
             <span className="text-slate-400 font-mono font-bold text-[10px] uppercase block mb-1">
               Official Problem Statement:
             </span>
-            {problem.statement}
+            <FormattedContent content={problem.statement} />
           </div>
 
           {/* Given Parameters */}
@@ -367,7 +377,7 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
                   e.stopPropagation();
                   onCopy(problem.officialSolution.calculationSteps.map(s => `${s.step}: ${s.latex}`).join("\n"), problem.id);
                 }}
-                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-900 border border-slate-800/80"
+                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 active:scale-95"
               >
                 {copiedId === problem.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 <span>{copiedId === problem.id ? "Copied" : "Copy Steps"}</span>
@@ -397,13 +407,13 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
 
             {/* Exam Trap Warning */}
             {problem.pitfallWarning && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5">
+              <div className="p-3 sm:p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-[11px] block uppercase font-mono">Modern Academy Exam Pitfall:</span>
-                  <p className="text-[11px] text-rose-200/90 mt-0.5 leading-relaxed">
-                    {problem.pitfallWarning}
-                  </p>
+                  <div className="text-[11px] text-rose-200/90 mt-0.5 leading-relaxed">
+                    <FormattedContent content={problem.pitfallWarning} />
+                  </div>
                 </div>
               </div>
             )}
