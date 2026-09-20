@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MNEMONIC_CARDS } from "../lib/curriculumData";
 import { MnemonicCard } from "../types";
-import { MathView } from "./MathView";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
 import { BrainCircuit, Lightbulb, BookmarkCheck, Sparkles, Compass } from "lucide-react";
 
 export const MnemonicsDeck: React.FC = () => {

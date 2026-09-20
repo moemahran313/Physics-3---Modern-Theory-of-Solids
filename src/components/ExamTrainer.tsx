@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { EXAM_QUESTIONS } from "../lib/examQuestions";
 import { ExamQuestion } from "../types";
-import { MathView, FormattedContent } from "./MathView";
+import { LaTeXRenderer, MathView, FormattedContent } from "./LaTeXRenderer";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { 
   GraduationCap, 
   CheckCircle2, 
@@ -13,13 +14,14 @@ import {
   ChevronLeft, 
   Award, 
   RotateCcw, 
-  Sparkles 
+  Sparkles,
+  Printer
 } from "lucide-react";
 
 export const ExamTrainer: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
-  const [revealedSolutions, setRevealedSolutions] = useState<Record<string, boolean>>({});
+  const [currentIndex, setCurrentIndex] = useLocalStorage<number>("trainer_current_idx", 0);
+  const [selectedAnswers, setSelectedAnswers, resetSelectedAnswers] = useLocalStorage<Record<string, string>>("trainer_selected_answers", {});
+  const [revealedSolutions, setRevealedSolutions, resetRevealedSolutions] = useLocalStorage<Record<string, boolean>>("trainer_revealed_solutions", {});
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const filteredQuestions = EXAM_QUESTIONS.filter((q) => {
@@ -27,7 +29,8 @@ export const ExamTrainer: React.FC = () => {
     return q.type.startsWith(typeFilter);
   });
 
-  const activeQuestion: ExamQuestion = filteredQuestions[currentIndex] || EXAM_QUESTIONS[0];
+  const safeIndex = Math.min(Math.max(0, currentIndex), filteredQuestions.length - 1);
+  const activeQuestion: ExamQuestion = filteredQuestions[safeIndex] || EXAM_QUESTIONS[0];
   const currentAnswer = selectedAnswers[activeQuestion.id];
   const isRevealed = revealedSolutions[activeQuestion.id];
 
@@ -46,8 +49,8 @@ export const ExamTrainer: React.FC = () => {
   };
 
   const handleReset = () => {
-    setSelectedAnswers({});
-    setRevealedSolutions({});
+    resetSelectedAnswers();
+    resetRevealedSolutions();
     setCurrentIndex(0);
   };
 

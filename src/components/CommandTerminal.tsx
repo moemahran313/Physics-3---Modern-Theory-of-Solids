@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
-import { FormattedContent } from "./MathView";
+import { FormattedContent } from "./LaTeXRenderer";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { 
   Send, 
   Terminal, 
@@ -53,17 +54,17 @@ Which topic or chapter would you like to investigate?`,
 export const CommandTerminal: React.FC<CommandTerminalProps> = ({
   initialCommand = "",
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_GREETING]);
-  const [inputValue, setInputValue] = useState(initialCommand);
+  const [messages, setMessages, resetMessages] = useLocalStorage<ChatMessage[]>("terminal_chat_messages", [INITIAL_GREETING]);
+  const [inputValue, setInputValue] = useLocalStorage<string>("terminal_input_value", initialCommand || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeModuleTab, setActiveModuleTab] = useState<"module1" | "module2">("module2");
+  const [activeModuleTab, setActiveModuleTab] = useLocalStorage<"module1" | "module2">("terminal_active_module_tab", "module2");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialCommand) {
       setInputValue(initialCommand);
     }
-  }, [initialCommand]);
+  }, [initialCommand, setInputValue]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -131,7 +132,8 @@ export const CommandTerminal: React.FC<CommandTerminalProps> = ({
   };
 
   const handleClear = () => {
-    setMessages([INITIAL_GREETING]);
+    resetMessages();
+    setInputValue("");
   };
 
   return (

@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
-/* Native Mobile & Touch UX Enhancements */
+/* ==========================================================================
+   Global Mobile & Touch UX Enhancements
+   ========================================================================== */
 :root {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  color-scheme: dark;
 }
 
 html, body {
   overflow-x: hidden;
   position: relative;
   width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Scrollbar hiding utility */
@@ -21,16 +27,61 @@ html, body {
   scrollbar-width: none;
 }
 
-/* Responsive KaTeX container behavior for mobile */
+/* ==========================================================================
+   Refined KaTeX Mathematical Typography & Baseline Alignment
+   ========================================================================== */
+
+/* Inline LaTeX alignment with text baseline */
+.katex {
+  font-size: 1.04em !important;
+  line-height: normal !important;
+  text-indent: 0 !important;
+  white-space: nowrap;
+}
+
+.katex .base {
+  display: inline-block;
+  vertical-align: -0.08em;
+}
+
+/* Dedicated inline math container */
+.latex-inline-container {
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  padding: 0 0.15em;
+  margin: 0 0.05em;
+  line-height: 1.35;
+  border-radius: 0.25rem;
+}
+
+/* Block LaTeX container spacing & scroll safety */
 .katex-display {
-  margin: 0.4em 0 !important;
+  margin: 0.5rem 0 !important;
+  padding: 0.25rem 0 !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
   max-width: 100% !important;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Mobile-first Media Queries specifically tuned for 375px - 430px device widths */
+.latex-display-container {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth layout shifts prevention on KaTeX load */
+.katex-html {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding-bottom: 2px;
+}
+
+/* ==========================================================================
+   Mobile-first Media Queries (375px - 430px device widths)
+   ========================================================================== */
 @media (min-width: 375px) and (max-width: 430px) {
   .main-workspace-container {
     padding-left: 0.875rem !important; /* 14px */
@@ -56,6 +107,12 @@ html, body {
   .mobile-pad-hero {
     padding: 1rem !important;
   }
+
+  /* Compact math padding on mobile screens */
+  .latex-display-container {
+    padding: 0.5rem 0.65rem !important;
+    margin: 0.35rem 0 !important;
+  }
 }
 
 /* Ultra-compact mobile viewport fallback (< 375px) */
@@ -65,5 +122,142 @@ html, body {
     padding-right: 0.625rem !important;
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+
+  .katex {
+    font-size: 0.95em !important;
+  }
 }
 
+/* ==========================================================================
+   Physical Paper Print Stylesheet (@media print)
+   Optimized for high-yield study sheets, exam derivations, and formula sheets
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.2cm 1.4cm 1.2cm 1.4cm;
+  }
+
+  /* Reset document root to clean, high-contrast print white */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10.5pt !important;
+    line-height: 1.5 !important;
+    overflow: visible !important;
+  }
+
+  /* Remove non-essential interactive and navigation UI */
+  header,
+  nav,
+  aside,
+  footer,
+  #mobile-bottom-nav,
+  .mobile-bottom-nav,
+  .sheet-quick-switcher,
+  .no-print,
+  [data-no-print],
+  button:not(.print-keep),
+  input,
+  form,
+  .fixed,
+  .toast,
+  .animate-pulse {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Unconstrain workspace layout for continuous paper flow */
+  .main-workspace-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Format cards and problem blocks for crisp monochrome / light print */
+  .rounded-2xl,
+  .rounded-xl,
+  .rounded-lg,
+  .bg-slate-900,
+  .bg-slate-950,
+  .bg-slate-850,
+  .mobile-optimized-card {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    border-radius: 4px !important;
+    margin-bottom: 12pt !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* High contrast text overrides */
+  .text-white,
+  .text-slate-100,
+  .text-slate-200,
+  .text-slate-300,
+  .text-slate-400 {
+    color: #0f172a !important;
+  }
+
+  .text-indigo-300,
+  .text-indigo-400,
+  .text-purple-300,
+  .text-purple-400,
+  .text-cyan-300,
+  .text-cyan-400 {
+    color: #1e1b4b !important;
+    font-weight: 600 !important;
+  }
+
+  .text-amber-300,
+  .text-amber-400 {
+    color: #78350f !important;
+    font-weight: 600 !important;
+  }
+
+  .text-emerald-300,
+  .text-emerald-400 {
+    color: #064e3b !important;
+    font-weight: 600 !important;
+  }
+
+  .text-rose-300,
+  .text-rose-400 {
+    color: #881337 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Ensure LaTeX equations scale smoothly and don't clip */
+  .katex {
+    color: #000000 !important;
+    font-size: 1em !important;
+  }
+
+  .katex-display,
+  .latex-display-container {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 6pt 10pt !important;
+    margin: 6pt 0 !important;
+    border-radius: 4px !important;
+    overflow-x: visible !important;
+    max-width: 100% !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Headings & Section breaks */
+  h1, h2, h3, h4, h5 {
+    color: #000000 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  h1 { font-size: 18pt !important; margin-bottom: 8pt !important; }
+  h2 { font-size: 15pt !important; margin-bottom: 6pt !important; }
+  h3 { font-size: 13pt !important; margin-bottom: 4pt !important; }
+  h4 { font-size: 11pt !important; margin-bottom: 3pt !important; }
+}

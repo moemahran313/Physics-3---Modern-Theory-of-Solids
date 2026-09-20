@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { GLOBAL_FORMULAS_MASTER } from "../lib/reflibData";
 import { ChapterId } from "../types";
-import { MathView } from "./MathView";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
 import { 
   FileSpreadsheet, 
   Search, 
   Copy, 
-  Check
+  Check,
+  Printer
 } from "lucide-react";
 
 interface GlobalEquationsViewProps {
@@ -73,12 +74,22 @@ export const GlobalEquationsView: React.FC<GlobalEquationsViewProps> = ({ onOpen
           </p>
         </div>
 
-        <button
-          onClick={onOpenConstants}
-          className="px-4 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-medium transition-colors min-h-[40px] self-start md:self-auto"
-        >
-          View Fundamental Constants
-        </button>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <button
+            onClick={() => window.print()}
+            title="Print Formula Sheet / PDF"
+            className="px-3.5 py-2 sm:py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-200 text-xs font-medium transition-colors min-h-[40px] flex items-center gap-1.5"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Sheet</span>
+          </button>
+          <button
+            onClick={onOpenConstants}
+            className="px-4 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-medium transition-colors min-h-[40px]"
+          >
+            View Constants
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MANDATORY_CONSTANTS } from "../lib/constants";
-import { MathView } from "./MathView";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
 import { X, Copy, Check, Search, ShieldCheck } from "lucide-react";
 
 interface ConstantsModalProps {

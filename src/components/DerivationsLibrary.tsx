@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DUAL_TRACK_TOPICS } from "../lib/curriculumData";
-import { MathView } from "./MathView";
-import { Binary, Search, Terminal, ChevronDown, ChevronUp, CheckCircle, FileText } from "lucide-react";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
+import { Binary, Search, Terminal, ChevronDown, ChevronUp, CheckCircle, FileText, Printer } from "lucide-react";
 
 export const DerivationsLibrary: React.FC<{
   onOpenTerminalWithTopic?: (topicTitle: string) => void;
@@ -34,15 +34,25 @@ export const DerivationsLibrary: React.FC<{
             </p>
           </div>
 
-          <div className="relative min-w-[260px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search proofs (e.g. Compton, Well, Bohr)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500"
-            />
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <button
+              onClick={() => window.print()}
+              title="Print Derivations Repository / Save as PDF"
+              className="px-3.5 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 border border-purple-500/50 text-xs font-medium text-purple-200 transition-colors flex items-center gap-1.5 shrink-0"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Proofs</span>
+            </button>
+            <div className="relative min-w-[220px] sm:min-w-[260px] flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search proofs (e.g. Compton, Well, Bohr)..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -92,10 +102,9 @@ export const DerivationsLibrary: React.FC<{
               </div>
 
               {/* Accordion Body */}
-              {isExpanded && (
-                <div className="p-5 md:p-6 bg-slate-950/60 border-t border-slate-800/80 space-y-5 animate-in fade-in">
-                  {/* Governing Equations Box */}
-                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+              <div className={`${isExpanded ? "block" : "hidden print:block"} p-5 md:p-6 bg-slate-950/60 border-t border-slate-800/80 space-y-5 animate-in fade-in`}>
+                {/* Governing Equations Box */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                     <span className="text-[11px] font-mono uppercase text-slate-400 block">
                       Governing Laws & Boundary Equations:
                     </span>
@@ -152,7 +161,6 @@ export const DerivationsLibrary: React.FC<{
                     </button>
                   </div>
                 </div>
-              )}
             </div>
           );
         })}

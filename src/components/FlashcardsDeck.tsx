@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { FLASHCARDS } from "../lib/curriculumData";
 import { Flashcard } from "../types";
-import { MathView } from "./MathView";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { 
   Layers, 
   RotateCw, 
@@ -16,16 +17,19 @@ import {
 
 export const FlashcardsDeck: React.FC = () => {
   const [selectedChapter, setSelectedChapter] = useState<string>("all");
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useLocalStorage<number>("flashcards_current_idx", 0);
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
-  const [masteredIds, setMasteredIds] = useState<Set<string>>(new Set());
+  const [masteredList, setMasteredList] = useLocalStorage<string[]>("flashcards_mastered_ids", []);
+
+  const masteredIds = new Set(masteredList);
 
   const filteredCards = FLASHCARDS.filter((c) => {
     if (selectedChapter === "all") return true;
     return c.chapterId === selectedChapter;
   });
 
-  const activeCard: Flashcard = filteredCards[currentIndex] || FLASHCARDS[0];
+  const safeIndex = Math.min(Math.max(0, currentIndex), filteredCards.length - 1);
+  const activeCard: Flashcard = filteredCards[safeIndex] || FLASHCARDS[0];
 
   const handleNext = () => {
     setIsFlipped(false);
@@ -38,15 +42,19 @@ export const FlashcardsDeck: React.FC = () => {
   };
 
   const handleToggleMastered = () => {
-    setMasteredIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(activeCard.id)) {
-        next.delete(activeCard.id);
+    setMasteredList((prev) => {
+      if (prev.includes(activeCard.id)) {
+        return prev.filter((id) => id !== activeCard.id);
       } else {
-        next.add(activeCard.id);
+        return [...prev, activeCard.id];
       }
-      return next;
     });
+  };
+
+  const handleResetProgress = () => {
+    setMasteredList([]);
+    setCurrentIndex(0);
+    setIsFlipped(false);
   };
 
   return (

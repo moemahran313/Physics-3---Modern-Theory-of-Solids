@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MasterclassSheet, MasterclassProblem, MasterclassTheoryItem } from "../types";
-import { MathView, FormattedContent } from "./MathView";
+import { MathView, LaTeXRenderer, FormattedContent } from "./LaTeXRenderer";
 import { 
   BookOpen, 
   AlertTriangle, 
@@ -11,7 +11,8 @@ import {
   ChevronUp,
   FileCheck2,
   Bookmark,
-  Sparkles
+  Sparkles,
+  Printer
 } from "lucide-react";
 
 interface SheetsMasterclassViewProps {
@@ -84,6 +85,14 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 pt-2 md:pt-0">
+            <button
+              onClick={() => window.print()}
+              title="Print Sheet / Export to PDF"
+              className="px-3.5 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/40 border border-indigo-500/50 text-xs font-medium text-indigo-200 transition-colors min-h-[40px] flex items-center gap-1.5"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print / PDF</span>
+            </button>
             <button
               onClick={onOpenConstants}
               className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[40px] text-center"
@@ -324,10 +333,9 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
         </div>
       </div>
 
-      {/* Expanded Solution Body */}
-      {isExpanded && (
-        <div className="p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs">
-          {/* Statement */}
+      {/* Solution Body (collapsible on screen, always visible for print) */}
+      <div className={`${isExpanded ? "block" : "hidden print:block"} p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs`}>
+        {/* Statement */}
           <div className="p-3 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 leading-relaxed text-xs sm:text-sm">
             <span className="text-slate-400 font-mono font-bold text-[10px] uppercase block mb-1">
               Official Problem Statement:
@@ -419,7 +427,6 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
             )}
           </div>
         </div>
-      )}
     </div>
   );
 };

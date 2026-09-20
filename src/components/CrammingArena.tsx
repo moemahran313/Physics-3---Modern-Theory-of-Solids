@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { CRAMMING_MOCK_EXAMS } from "../lib/reflibData";
-import { MathView } from "./MathView";
+import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { 
   Flame, 
   CheckCircle, 
@@ -11,7 +12,8 @@ import {
   ArrowRight,
   Calculator,
   Zap,
-  ChevronLeft
+  ChevronLeft,
+  RotateCcw
 } from "lucide-react";
 
 interface CrammingArenaProps {
@@ -19,20 +21,30 @@ interface CrammingArenaProps {
 }
 
 export const CrammingArena: React.FC<CrammingArenaProps> = ({ onOpenConstants }) => {
-  const [selectedExamId, setSelectedExamId] = useState<string>("mock-1");
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState<number>(0);
-  const [userInputs, setUserInputs] = useState<Record<string, string>>({});
-  const [evaluatedAnswers, setEvaluatedAnswers] = useState<Record<string, {
+  const [selectedExamId, setSelectedExamId] = useLocalStorage<string>("cramming_selectedExamId", "mock-1");
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useLocalStorage<number>("cramming_currentQuestionIdx", 0);
+  const [userInputs, setUserInputs, resetUserInputs] = useLocalStorage<Record<string, string>>("cramming_userInputs", {});
+  const [evaluatedAnswers, setEvaluatedAnswers, resetEvaluatedAnswers] = useLocalStorage<Record<string, {
     status: "perfect" | "warning" | "incorrect";
     feedback: string;
     points: number;
-  }>>({});
-  const [revealedSolutions, setRevealedSolutions] = useState<Record<string, boolean>>({});
+  }>>("cramming_evaluatedAnswers", {});
+  const [revealedSolutions, setRevealedSolutions, resetRevealedSolutions] = useLocalStorage<Record<string, boolean>>("cramming_revealedSolutions", {});
 
   const currentExam = CRAMMING_MOCK_EXAMS.find(e => e.id === selectedExamId) || CRAMMING_MOCK_EXAMS[0];
-  const currentQuestion = currentExam.questions[currentQuestionIdx];
+  const safeQuestionIdx = Math.min(Math.max(0, currentQuestionIdx), currentExam.questions.length - 1);
+  const currentQuestion = currentExam.questions[safeQuestionIdx] || currentExam.questions[0];
 
   const currentInputValue = userInputs[currentQuestion.id] || "";
+
+  const handleResetCurrentExamProgress = () => {
+    if (window.confirm("Reset all entered answers and scores for the current exam session?")) {
+      resetUserInputs();
+      resetEvaluatedAnswers();
+      resetRevealedSolutions();
+      setCurrentQuestionIdx(0);
+    }
+  };
 
   const handleKeypadInsert = (symbol: string) => {
     setUserInputs(prev => ({
@@ -137,6 +149,14 @@ export const CrammingArena: React.FC<CrammingArenaProps> = ({ onOpenConstants })
             className="px-3.5 py-2 sm:py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-xs font-medium text-indigo-200 transition-colors min-h-[40px]"
           >
             Constants Sheet
+          </button>
+          <button
+            onClick={handleResetCurrentExamProgress}
+            title="Reset answers for current session"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-850 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-800/60 text-xs font-medium text-slate-400 hover:text-rose-300 transition-colors min-h-[40px] flex items-center gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reset Progress</span>
           </button>
         </div>
       </div>

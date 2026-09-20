@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DUAL_TRACK_TOPICS } from "../lib/curriculumData";
 import { DualTrackTopic } from "../types";
-import { MathView, FormattedContent } from "./MathView";
+import { LaTeXRenderer, MathView, FormattedContent } from "./LaTeXRenderer";
 import { 
   BookOpen, 
   Binary, 
@@ -13,7 +13,8 @@ import {
   Terminal, 
   Compass, 
   ShieldCheck, 
-  Atom 
+  Atom,
+  Printer
 } from "lucide-react";
 
 interface CurriculumBrowserProps {
