@@ -228,6 +228,48 @@ async function startServer() {
       });
     }
 
+async function generatePhysicsContentWithFallback(
+  ai: GoogleGenAI,
+  contents: Array<{ role: string; parts: Array<{ text: string }> }>,
+  systemInstruction: string
+): Promise<{ text: string; modelUsed: string } | null> {
+  const models = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+  
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+          },
+        });
+
+        const text = response.text?.trim();
+        if (text) {
+          return { text, modelUsed: model };
+        }
+      } catch (err: unknown) {
+        const errMsg = (err as Error)?.message || "";
+        console.warn(`[Gemini Engine] Model ${model} attempt ${attempt + 1} failed: ${errMsg}`);
+        
+        // If it's a 503 high demand or 429 rate limit, wait briefly before retrying or switching model
+        const isTransient = errMsg.includes("503") || errMsg.includes("429") || errMsg.includes("high demand") || errMsg.includes("UNAVAILABLE");
+        if (isTransient && attempt === 0) {
+          await new Promise((res) => setTimeout(res, 400));
+        } else if (!isTransient) {
+          // If non-transient model error, try next candidate model
+          break;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
     try {
       const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
@@ -253,19 +295,20 @@ async function startServer() {
         parts: [{ text: userPrompt }],
       });
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents,
-        config: {
-          systemInstruction: MASTER_PHYSICS_SYSTEM_PROMPT,
-          temperature: 0.2, // Low temperature for high mathematical and pedagogical rigor
-        },
-      });
+      const result = await generatePhysicsContentWithFallback(ai, contents, MASTER_PHYSICS_SYSTEM_PROMPT);
 
-      const text = response.text || "No response received from Core Engine.";
+      if (result && result.text) {
+        return res.json({
+          source: result.modelUsed,
+          response: result.text,
+        });
+      }
+
+      // If all models are experiencing temporary high demand, fallback cleanly to curated curriculum engine
+      const fallback = generateCurriculumFallback(message, commandMode);
       return res.json({
-        source: "gemini-3.8-flash",
-        response: text,
+        source: "offline_curriculum_engine",
+        response: fallback,
       });
     } catch (err: unknown) {
       console.error("Gemini API invocation error:", err);
