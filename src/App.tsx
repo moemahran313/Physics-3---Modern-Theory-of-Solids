@@ -10,6 +10,7 @@ import { VideoTheater } from "./components/VideoTheater";
 import { GlobalEquationsView } from "./components/GlobalEquationsView";
 import { CommandTerminal } from "./components/CommandTerminal";
 import { InteractiveSandboxes } from "./components/InteractiveSandboxes";
+import { PhysicsVisualizer } from "./components/PhysicsVisualizer";
 import { CurriculumBrowser } from "./components/CurriculumBrowser";
 import { DerivationsLibrary } from "./components/DerivationsLibrary";
 import { ExamTrainer } from "./components/ExamTrainer";
@@ -208,6 +209,11 @@ export function App() {
             {/* Cramming Mnemonics Deck */}
             {currentTab === "mnemonics" && (
               <MnemonicsDeck />
+            )}
+
+            {/* Dynamic Physics Visualizer */}
+            {currentTab === "visualizer" && (
+              <PhysicsVisualizer />
             )}
 
             {/* Interactive Physics Sandboxes */}

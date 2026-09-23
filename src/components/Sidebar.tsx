@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Atom,
   GraduationCap,
+  Activity,
   X
 } from "lucide-react";
 import { PWAInstallButton } from "./PWAInstallButton";
@@ -227,6 +228,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
             <div className="space-y-1">
+              <SidebarItem
+                active={currentTab === "visualizer"}
+                onClick={() => handleItemClick("visualizer")}
+                icon={<Activity className="w-4 h-4 text-cyan-400" />}
+                label="Physics Visualizer"
+                shortLabel="Vis"
+                badge="/visualize"
+                collapsed={collapsed && !isMobileOpen}
+              />
               <SidebarItem
                 active={currentTab === "sandboxes"}
                 onClick={() => handleItemClick("sandboxes")}

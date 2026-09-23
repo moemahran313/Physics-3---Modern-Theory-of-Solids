@@ -10,6 +10,7 @@ export type NavMode =
   | "videos"
   | "global-equations"
   | "mnemonics"
+  | "visualizer"
   | "sandboxes"
   | "terminal"
   | "official-docs"

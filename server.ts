@@ -39,10 +39,19 @@ Recognize and format responses according to triggers:
 - /lecture [topic]: Deep, end-to-end curricular exposition with Double-Immersive Protocol.
 - /derive [law/equation]: Step-by-step axiomatic mathematical proof from first principles.
 - /sandbox [phenomenon]: Interactive thought experiment altering parameters and testing consequences.
+- /visualize [concept]: Dynamic graphical and animated visualization of key physics concepts (wavepacket dispersion, potential well eigenstates and probability densities, barrier tunneling, blackbody spectrum, Compton kinematics, photoelectric stopping potential, Bohr transitions, relativistic light clocks). When invoked, provide a deep theoretical exposition accompanied by the explicit embedded tag \`[VISUALIZATION:concept_name]\` (where concept_name is one of: \`wavepacket\`, \`potential_well\`, \`tunneling\`, \`blackbody\`, \`compton\`, \`photoelectric\`, \`bohr_atom\`, \`relativity\`).
 - /exam-trainer [topic/all]: Authentic Modern Academy exam questions (Type A, B, C, D) with mandatory physical justification.
 - /mnemonics [topic]: Algorithmic mnemonic devices, spatial anchors, memory frameworks.
 - /lab-analyzer [experiment]: Analysis of experimental setups (Photocells, Compton spectrometer, Davisson-Germer, Michelson-Morley).
 - /flashcards [chapter]: Front/back technical active recall cards with limits, units, and behaviors.
+
+---
+
+## 3.3 MODULE 3: THE /visualize ENGINE SPECIFICATION
+System Role & Objective: You are the dedicated visual simulation and state space module for the Physics 3 (ELCN114 / ELC 214) Engine. When triggered with \`/visualize [concept]\`, you provide:
+1. **Physical Overview & Conceptual Architecture:** Clear explanation of the spatial and temporal evolution, wavefunctions, phase and group velocities, or probability distributions.
+2. **Governing Equations & Invariants:** Core LaTeX formulations ($...$ and $$...$$), defining dispersion relations $\omega(k)$, wave numbers $k_n = \frac{n\pi}{L}$, and probability density integrals $\int |\psi|^2 dx$.
+3. **Interactive Simulation Hook:** You MUST include the exact markup token \`[VISUALIZATION:concept_key]\` (e.g., \`[VISUALIZATION:wavepacket]\` or \`[VISUALIZATION:potential_well]\`) so the client terminal seamlessly renders the real-time interactive physics canvas.
 
 ---
 
@@ -293,9 +302,129 @@ async function startServer() {
 function generateCurriculumFallback(prompt: string, commandMode?: string): string {
   const fullInput = `${commandMode || ""} ${prompt}`.trim();
   const query = fullInput.toLowerCase();
+  const isVisualize = fullInput.startsWith("/visualize") || commandMode === "/visualize" || query.includes("visualize") || query.includes("plot");
   const isDerive = fullInput.startsWith("/derive") || commandMode === "/derive" || query.includes("derive");
   const isSandbox = fullInput.startsWith("/sandbox") || commandMode === "/sandbox" || query.includes("sandbox");
   const isResolution = query.includes("hypothesis") || query.includes("resolution") || query.includes("resolve") || query.includes("reveal") || query.includes("answer") || query.includes("solution");
+
+  // ==============================================================
+  // MODULE 3: THE /visualize DYNAMIC SIMULATION ENGINE
+  // ==============================================================
+  if (isVisualize) {
+    if (query.includes("wavepacket") || query.includes("wave packet") || query.includes("group") || query.includes("phase") || query.includes("dispersion")) {
+      return `### **DYNAMIC VISUALIZATION: Spatial & Temporal Evolution of a Wave Packet**
+
+**1. Physical & Mathematical Foundations:**
+A localized quantum particle is represented not by a single infinite monochromatic plane wave, but by a continuous superposition of harmonic plane waves forming a **Gaussian wave packet**:
+$$\\Psi(x,t) = \\frac{1}{\\sqrt{2\\pi}} \\int_{-\\infty}^{+\\infty} A(k) e^{i(kx - \\omega(k) t)} dk$$
+where the amplitude distribution $A(k)$ is centered at central wavenumber $k_0$ with spectral spread $\\Delta k = 1 / (2\\Delta x)$.
+
+**2. Phase Velocity ($v_p$) vs. Group Velocity ($v_g$):**
+- **Phase Velocity ($v_p$):** The rate at which individual phase crests of constituent waves advance through space:
+$$v_p = \\frac{\\omega}{k} = \\frac{E}{p}$$
+- **Group Velocity ($v_g$):** The velocity of the overall envelope profile (the probability packet where the particle is found):
+$$v_g = \\left.\\frac{d\\omega}{dk}\\right|_{k_0} = \\frac{dE}{dp} = v_{\\text{classical}}$$
+
+**3. Quantum Dispersion:**
+For a non-relativistic free electron ($E = \\frac{p^2}{2m} = \\frac{\\hbar^2 k^2}{2m} \\implies \\omega(k) = \\frac{\\hbar k^2}{2m}$):
+$$v_p = \\frac{\\hbar k}{2m} = \\frac{1}{2} v_g \\implies v_g = 2 v_p$$
+Because $v_p$ depends on $k$, different frequency components travel at different speeds, causing the quantum wave packet to inevitably spread over time ($\Delta x(t) = \Delta x_0 \sqrt{1 + (\\hbar t / 2m\\Delta x_0^2)^2}$). In contrast, for light in vacuum ($\omega = c k$), $v_g = v_p = c$ (non-dispersive).
+
+[VISUALIZATION:wavepacket]`;
+    }
+
+    if (query.includes("well") || query.includes("box") || query.includes("potential_well") || query.includes("eigen") || query.includes("probability")) {
+      return `### **DYNAMIC VISUALIZATION: Quantum Potential Well Eigenstates & Probability Densities**
+
+**1. Physical & Mathematical Foundations:**
+For an electron confined to a 1D potential well of width $L$, the Time-Independent Schrödinger Equation (TISE) restricts allowed stationary states to discrete standing waves:
+$$\\psi_n(x) = \\sqrt{\\frac{2}{L}} \\sin\\left(\\frac{n\\pi x}{L}\\right) \\quad (n = 1, 2, 3, \\dots)$$
+
+**2. Quantized Energy Eigenvalues ($E_n$):**
+$$E_n = \\frac{n^2 h^2}{8mL^2} = \\frac{n^2 \\pi^2 \\hbar^2}{2mL^2} = n^2 E_1$$
+- **Zero-Point Energy ($n=1$):** $E_1 > 0$. The ground state energy cannot equal zero without violating the Heisenberg Uncertainty Principle ($\\Delta x \\le L \\implies \\Delta p \\ge \\frac{\\hbar}{2L}$).
+- **Spatial Nodes:** State $n$ exhibits exactly $(n-1)$ internal zero-crossing nodes.
+
+**3. Born Probability Density & Finite Well Penetration:**
+The probability of measuring the electron between $x_1$ and $x_2$ is given by:
+$$P(x_1 \\le x \\le x_2) = \\int_{x_1}^{x_2} |\\psi_n(x)|^2 dx = \\frac{2}{L} \\int_{x_1}^{x_2} \\sin^2\\left(\\frac{n\\pi x}{L}\\right) dx$$
+In a **Finite Potential Well** ($U(x) = U_0$ for $|x| > L/2$), the wavefunction does not terminate abruptly at the boundaries. It exponentially decays into the classically forbidden barrier regions with penetration depth:
+$$\\delta = \\frac{1}{\\gamma} = \\frac{\\hbar}{\\sqrt{2m(U_0 - E)}}$$
+
+[VISUALIZATION:potential_well]`;
+    }
+
+    if (query.includes("tunneling") || query.includes("barrier") || query.includes("leak")) {
+      return `### **DYNAMIC VISUALIZATION: Quantum Barrier Tunneling & Transmission Coefficient**
+
+**1. Physical & Mathematical Foundations:**
+When a quantum matter wave of energy $E$ impinges upon a rectangular potential barrier of height $U_0 > E$ and width $a$, classical mechanics predicts total reflection ($T=0$). Quantum mechanics permits an exponential evanescent wave through the barrier:
+$$\\psi_{II}(x) = C e^{-\\gamma x} + D e^{+\\gamma x} \\quad \\text{where } \\gamma = \\frac{\\sqrt{2m(U_0 - E)}}{\\hbar}$$
+
+**2. Transmission Coefficient ($T$):**
+For thick barriers ($\gamma a \\gg 1$), the transmission probability is governed by:
+$$T \\approx 16\\frac{E}{U_0}\\left(1 - \\frac{E}{U_0}\\right) e^{-2\\gamma a}$$
+
+[VISUALIZATION:tunneling]`;
+    }
+
+    if (query.includes("blackbody") || query.includes("planck") || query.includes("furnace")) {
+      return `### **DYNAMIC VISUALIZATION: Blackbody Radiation & Planck Spectral Distribution**
+
+**1. Planck Distribution vs. Classical Rayleigh-Jeans:**
+$$u(\\lambda, T) = \\frac{8\\pi h c}{\\lambda^5 \\left(e^{\\frac{hc}{\\lambda k_B T}} - 1\\right)}$$
+- **Wien's Displacement Law:** $\\lambda_{\\max} T = 2.898 \\times 10^{-3}\\text{ m}\\cdot\\text{K}$
+- **Stefan-Boltzmann Law:** $I = \\sigma T^4$ where $\\sigma = 5.67 \\times 10^{-8}\\text{ W/m}^2\\text{K}^4$.
+
+[VISUALIZATION:blackbody]`;
+    }
+
+    if (query.includes("compton")) {
+      return `### **DYNAMIC VISUALIZATION: Relativistic Compton Scattering Kinematics**
+
+**1. Wavelength Shift Formula:**
+$$\\Delta\\lambda = \\lambda' - \\lambda = \\lambda_c (1 - \\cos\\theta) \\quad \\text{where } \\lambda_c = \\frac{h}{m_0 c} = 0.0243\\text{ \\AA} = 2.426\\text{ pm}$$
+Maximum shift occurs at $\\theta = 180^\\circ$ (backscattering), yielding $\\Delta\\lambda = 2\\lambda_c = 0.0486\\text{ \\AA}$.
+
+[VISUALIZATION:compton]`;
+    }
+
+    if (query.includes("photoelectric")) {
+      return `### **DYNAMIC VISUALIZATION: Photoelectric Effect & Stopping Potential**
+
+**1. Einstein Photoelectric Equation:**
+$$hf = \\phi + K_{\\max} = \\phi + e V_s$$
+where $\\phi = h f_c$ is the material work function and $V_s$ is the stopping potential required to reduce photocurrent to zero.
+
+[VISUALIZATION:photoelectric]`;
+    }
+
+    if (query.includes("bohr") || query.includes("atom") || query.includes("hydrogen") || query.includes("rydberg")) {
+      return `### **DYNAMIC VISUALIZATION: Bohr Atom Orbits & Rydberg Spectral Transitions**
+
+**1. Quantized Orbits & Energies:**
+$$r_n = n^2 a_0 = n^2 (0.0529\\text{ nm}), \\quad E_n = -\\frac{13.6\\text{ eV}}{n^2}$$
+$$\\frac{1}{\\lambda} = R_H \\left(\\frac{1}{n_f^2} - \\frac{1}{n_i^2}\\right) \\quad (R_H = 1.097 \\times 10^7\\text{ m}^{-1})$$
+
+[VISUALIZATION:bohr_atom]`;
+    }
+
+    if (query.includes("relativity") || query.includes("dilation") || query.includes("light clock") || query.includes("lorentz")) {
+      return `### **DYNAMIC VISUALIZATION: Special Relativity Light-Clock & Time Dilation**
+
+**1. Transverse Light-Clock Invariance:**
+$$\\Delta t = \\gamma \\Delta t_p = \\frac{\\Delta t_p}{\\sqrt{1 - \\frac{v^2}{c^2}}}$$
+Proper time $\\Delta t_p$ is always the minimum duration measured by a clock at rest in the event frame.
+
+[VISUALIZATION:relativity]`;
+    }
+
+    // Default visualization
+    return `### **DYNAMIC VISUALIZATION: Quantum Wave Mechanics**
+Rendering interactive visualization for: **${prompt}**.
+
+[VISUALIZATION:wavepacket]`;
+  }
 
   // ==============================================================
   // MODULE 2: THE /sandbox ENGINE (SOCRATIC INTERROGATION)

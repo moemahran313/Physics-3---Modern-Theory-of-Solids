@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
 import { FormattedContent } from "./LaTeXRenderer";
+import { PhysicsVisualizer, VisualizationConcept } from "./PhysicsVisualizer";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { 
   Send, 
@@ -16,7 +17,9 @@ import {
   GraduationCap, 
   FlaskConical, 
   BrainCircuit, 
-  Layers 
+  Layers,
+  Activity,
+  Maximize2
 } from "lucide-react";
 
 interface CommandTerminalProps {
@@ -31,9 +34,10 @@ const INITIAL_GREETING: ChatMessage = {
   content: `### **[Autonomous Educational Core Engine: Physics 3 (ELCN114 / ELC 214)]**
 
 **System Status:** ONLINE | **Academic Standard:** Modern Academy High-Yield Curricular Framework  
-**Enforced Pedagogical Models:** Double-Immersive Dual Encoding, Axiomatic Structural Scaffolding, Socratic Mental Sandboxing
+**Enforced Pedagogical Models:** Double-Immersive Dual Encoding, Axiomatic Structural Scaffolding, Socratic Mental Sandboxing, Dynamic Visualizer
 
 Welcome, Student. The Core Engine is fully operational. To execute an analytical sequence, choose a trigger:
+- \`/visualize [concept]\` - Interactive canvas visualization (e.g. \`/visualize wavepacket\`, \`/visualize potential_well\`, \`/visualize tunneling\`).
 - \`/lecture [topic]\` - Comprehensive axiomatic lecture with Dual-Track Encoding.
 - \`/derive [equation]\` - Rigorous first-principles proof without skipped steps.
 - \`/sandbox [phenomenon]\` - Boundary condition stress testing and interactive simulations.
@@ -51,13 +55,50 @@ Welcome, Student. The Core Engine is fully operational. To execute an analytical
 Which topic or chapter would you like to investigate?`,
 };
 
+// Helper to extract visualization concept from engine message or prompt
+function parseVisualizationInfo(content: string, userPrompt?: string): { cleanContent: string; concept: VisualizationConcept | null } {
+  const match = content.match(/\[VISUALIZATION:([a-zA-Z0-9_-]+)\]/);
+  if (match) {
+    const rawConcept = match[1].toLowerCase();
+    const clean = content.replace(/\[VISUALIZATION:[a-zA-Z0-9_-]+\]/g, "").trim();
+    const validConcepts: VisualizationConcept[] = [
+      "wavepacket",
+      "potential_well",
+      "tunneling",
+      "blackbody",
+      "compton",
+      "photoelectric",
+      "bohr_atom",
+      "relativity"
+    ];
+    const found = validConcepts.find(c => c === rawConcept || rawConcept.includes(c));
+    return { cleanContent: clean, concept: found || "wavepacket" };
+  }
+
+  // If user explicitly asked /visualize [concept]
+  if (userPrompt && userPrompt.startsWith("/visualize")) {
+    const q = userPrompt.toLowerCase();
+    if (q.includes("wavepacket") || q.includes("wave packet") || q.includes("packet") || q.includes("dispersion")) return { cleanContent: content, concept: "wavepacket" };
+    if (q.includes("well") || q.includes("box") || q.includes("infinite") || q.includes("finite") || q.includes("potential")) return { cleanContent: content, concept: "potential_well" };
+    if (q.includes("tunnel") || q.includes("barrier")) return { cleanContent: content, concept: "tunneling" };
+    if (q.includes("blackbody") || q.includes("planck")) return { cleanContent: content, concept: "blackbody" };
+    if (q.includes("compton")) return { cleanContent: content, concept: "compton" };
+    if (q.includes("photoelectric") || q.includes("work function")) return { cleanContent: content, concept: "photoelectric" };
+    if (q.includes("bohr") || q.includes("atom") || q.includes("hydrogen")) return { cleanContent: content, concept: "bohr_atom" };
+    if (q.includes("relativity") || q.includes("dilation") || q.includes("lorentz")) return { cleanContent: content, concept: "relativity" };
+    return { cleanContent: content, concept: "wavepacket" };
+  }
+
+  return { cleanContent: content, concept: null };
+}
+
 export const CommandTerminal: React.FC<CommandTerminalProps> = ({
   initialCommand = "",
 }) => {
   const [messages, setMessages, resetMessages] = useLocalStorage<ChatMessage[]>("terminal_chat_messages", [INITIAL_GREETING]);
   const [inputValue, setInputValue] = useLocalStorage<string>("terminal_input_value", initialCommand || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeModuleTab, setActiveModuleTab] = useLocalStorage<"module1" | "module2">("terminal_active_module_tab", "module2");
+  const [activeModuleTab, setActiveModuleTab] = useLocalStorage<"module1" | "module2" | "visualize">("terminal_active_module_tab", "visualize");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -172,6 +213,18 @@ export const CommandTerminal: React.FC<CommandTerminalProps> = ({
           {/* Module Switcher Tabs */}
           <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-slate-900 border border-slate-800">
             <button
+              onClick={() => setActiveModuleTab("visualize")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold transition-all ${
+                activeModuleTab === "visualize"
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-cyan-400" />
+              <span>/visualize Engine</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            </button>
+            <button
               onClick={() => setActiveModuleTab("module2")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold transition-all ${
                 activeModuleTab === "module2"
@@ -181,30 +234,94 @@ export const CommandTerminal: React.FC<CommandTerminalProps> = ({
             >
               <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
               <span>Module 2: /sandbox Engine</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             </button>
             <button
               onClick={() => setActiveModuleTab("module1")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold transition-all ${
                 activeModuleTab === "module1"
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm"
+                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Binary className="w-3.5 h-3.5 text-cyan-400" />
+              <Binary className="w-3.5 h-3.5 text-purple-400" />
               <span>Module 1: /lecture &amp; /derive</span>
             </button>
           </div>
 
           <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
-            {activeModuleTab === "module2"
+            {activeModuleTab === "visualize"
+              ? "Module 3: Dynamic Physics Simulations • Wavepackets • Probability Densities • Relativity"
+              : activeModuleTab === "module2"
               ? "Axiom III: Socratic Interrogation • Parameter Shifts • Predictive Deduction"
               : "Axiom I & II: Axiomatic Foundations • Chalkboard Proofs • Physical Limits"}
           </span>
         </div>
 
+        {/* Module 3: The /visualize Dynamic Engine Triggers */}
+        {activeModuleTab === "visualize" && (
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+            <span className="text-cyan-500/80 font-mono text-[10px] font-bold whitespace-nowrap">Simulations:</span>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "wavepacket")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize wavepacket (v_p vs v_g)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "potential_well")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize potential_well (|ψ|²)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "tunneling")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize tunneling (Barrier &amp; T)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "blackbody")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize blackbody (Planck Spectrum)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "compton")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize compton (Kinematics)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "photoelectric")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize photoelectric (V_s vs f)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "bohr_atom")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize bohr_atom (Transitions)</span>
+            </button>
+            <button
+              onClick={() => handleCommandShortcut("/visualize", "relativity")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-950/70 hover:bg-cyan-900/70 text-cyan-300 border border-cyan-700/50 font-mono text-[11px] transition-colors whitespace-nowrap shadow-sm"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>/visualize relativity (Light Clock)</span>
+            </button>
+          </div>
+        )}
+
         {/* Module 2: The /sandbox Socratic Engine Triggers */}
-        {activeModuleTab === "module2" ? (
+        {activeModuleTab === "module2" && (
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
             <span className="text-amber-500/80 font-mono text-[10px] font-bold whitespace-nowrap">Ch1:</span>
             <button
@@ -286,8 +403,10 @@ export const CommandTerminal: React.FC<CommandTerminalProps> = ({
               <span>💡 Reveal Socratic Resolution</span>
             </button>
           </div>
-        ) : (
-          /* Module 1: /lecture & /derive Quick Buttons */
+        )}
+
+        {/* Module 1: /lecture & /derive Quick Buttons */}
+        {activeModuleTab === "module1" && (
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
             <span className="text-slate-500 font-mono text-[10px] whitespace-nowrap">Ch1:</span>
             <button
@@ -386,45 +505,62 @@ export const CommandTerminal: React.FC<CommandTerminalProps> = ({
 
       {/* Messages Output Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 font-sans">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex items-start gap-3 ${
-              m.sender === "user" ? "flex-row-reverse" : "flex-row"
-            }`}
-          >
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-semibold ${
-                m.sender === "user"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-800 border border-slate-700 text-cyan-400"
-              }`}
-            >
-              {m.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-            </div>
+        {messages.map((m, index) => {
+          const prevMsg = index > 0 ? messages[index - 1] : null;
+          const userPrompt = prevMsg && prevMsg.sender === "user" ? prevMsg.content : undefined;
+          const { cleanContent, concept } = parseVisualizationInfo(m.content, userPrompt);
 
+          return (
             <div
-              className={`max-w-[85%] md:max-w-[80%] rounded-2xl p-4 md:p-5 shadow-lg ${
-                m.sender === "user"
-                  ? "bg-indigo-600 text-white rounded-tr-none font-mono text-sm"
-                  : "bg-slate-950/80 border border-slate-800/90 text-slate-200 rounded-tl-none"
+              key={m.id}
+              className={`flex items-start gap-3 ${
+                m.sender === "user" ? "flex-row-reverse" : "flex-row"
               }`}
             >
-              <div className="flex items-center justify-between mb-2 text-[11px] opacity-70">
-                <span className="font-semibold uppercase tracking-wider font-mono">
-                  {m.sender === "user" ? "Engineering Student" : "Autonomous Core Engine"}
-                </span>
-                <span>{m.timestamp}</span>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-semibold ${
+                  m.sender === "user"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-800 border border-slate-700 text-cyan-400"
+                }`}
+              >
+                {m.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
 
-              {m.sender === "user" ? (
-                <p className="whitespace-pre-wrap">{m.content}</p>
-              ) : (
-                <FormattedContent content={m.content} />
-              )}
+              <div
+                className={`w-full max-w-[95%] md:max-w-[85%] rounded-2xl p-4 md:p-5 shadow-lg ${
+                  m.sender === "user"
+                    ? "bg-indigo-600 text-white rounded-tr-none font-mono text-sm max-w-[85%] md:max-w-[80%]"
+                    : "bg-slate-950/80 border border-slate-800/90 text-slate-200 rounded-tl-none"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2 text-[11px] opacity-70">
+                  <span className="font-semibold uppercase tracking-wider font-mono">
+                    {m.sender === "user" ? "Engineering Student" : "Autonomous Core Engine"}
+                  </span>
+                  <span>{m.timestamp}</span>
+                </div>
+
+                {m.sender === "user" ? (
+                  <p className="whitespace-pre-wrap">{m.content}</p>
+                ) : (
+                  <>
+                    <FormattedContent content={cleanContent} />
+                    {concept && (
+                      <div className="mt-4 pt-3 border-t border-slate-800">
+                        <PhysicsVisualizer
+                          initialConcept={concept}
+                          embedded={true}
+                          className="bg-slate-900/95 border-slate-700/80 shadow-2xl"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex items-start gap-3">
