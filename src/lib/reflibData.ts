@@ -16,9 +16,10 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s1-t1",
         title: "Wien's Displacement Law & Stefan-Boltzmann Law",
-        statement: "Blackbody radiation spectrum depends solely on absolute temperature T. As T increases, total radiated energy increases (area under curve) and peak wavelength shifts toward shorter wavelengths.",
+        statement: "Blackbody radiation spectrum depends solely on absolute temperature $T$. As $T$ increases, total radiated power increases as $T^4$ (area under curve) and peak emission wavelength $\\lambda_{\\text{max}}$ shifts toward shorter wavelengths (higher frequencies).",
+        proofOrDerivation: "### 1. Derivation of Wien's Displacement Law:\nPlanck's spectral energy density is given by:\n$$u(\\lambda, T) = \\frac{8\\pi hc}{\\lambda^5 \\left(e^{\\frac{hc}{\\lambda k_B T}} - 1\\right)}$$\nTo locate the peak wavelength $\\lambda_{\\text{max}}$, differentiate with respect to $\\lambda$ and set $\\frac{\\partial u}{\\partial \\lambda} = 0$:\n$$\\frac{\\partial u}{\\partial \\lambda} = 8\\pi hc \\left[ \\frac{-5}{\\lambda^6 (e^x - 1)} + \\frac{x e^x}{\\lambda^6 (e^x - 1)^2} \\right] = 0 \\quad \\text{where } x = \\frac{hc}{\\lambda k_B T}$$\nMultiplying by $\\frac{\\lambda^6 (e^x - 1)}{8\\pi hc}$:\n$$-5 + \\frac{x e^x}{e^x - 1} = 0 \\implies x = 5(1 - e^{-x})$$\nNumerical solution of this transcendental equation yields $x \\approx 4.9651$.\nSubstituting back $x = \\frac{hc}{\\lambda_{\\text{max}} k_B T}$:\n$$\\lambda_{\\text{max}} T = \\frac{hc}{4.9651 k_B} = 2.898 \\times 10^{-3} \\text{ m}\\cdot\\text{K}$$\n\n### 2. Derivation of Stefan-Boltzmann Law:\nIntegrating total energy density over all wavelengths $\\lambda \\in [0, \\infty)$:\n$$u_{\\text{total}} = \\int_0^\\infty u(\\lambda) d\\lambda = \\frac{8\\pi k_B^4 T^4}{c^3 h^3} \\int_0^\\infty \\frac{x^3}{e^x - 1} dx = \\frac{8\\pi^5 k_B^4}{15 c^3 h^3} T^4$$\nThe total radiated power per unit surface area is $I = \\frac{c}{4} u_{\\text{total}} = \\sigma T^4$, where:\n$$\\sigma = \\frac{2\\pi^5 k_B^4}{15 c^2 h^3} = 5.67 \\times 10^{-8} \\text{ W}\\cdot\\text{m}^{-2}\\cdot\\text{K}^{-4}$$",
         keyFormulas: [
-          "\\lambda_{\\max} T = 2.898 \\times 10^{-3} \\text{ m}\\cdot\\text{K}",
+          "\\lambda_{\\text{max}} T = 2.898 \\times 10^{-3} \\text{ m}\\cdot\\text{K}",
           "P = \\sigma A \\varepsilon T^4 \\quad (\\varepsilon = 1 \\text{ for ideal blackbody})",
           "I = \\sigma T^4 \\quad (\\sigma = 5.67 \\times 10^{-8} \\text{ W}\\cdot\\text{m}^{-2}\\cdot\\text{K}^{-4})"
         ],
@@ -27,8 +28,8 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s1-t2",
         title: "Planck's Quantum Hypothesis vs. Rayleigh-Jeans UV Catastrophe",
-        statement: "Rayleigh-Jeans classical model I(\\lambda, T) = \\frac{2\\pi c k_B T}{\\lambda^4} predicts infinite energy density as λ → 0 (UV catastrophe). Planck resolved this by postulating that cavity atomic oscillators possess discrete quantized energy levels E_n = n h f and absorb/emit light in quanta E = hf.",
-        proofOrDerivation: "Planck's law: I(\\lambda, T) = \\frac{2\\pi h c^2}{\\lambda^5 (e^{hc/\\lambda k_B T} - 1)}. For long wavelengths hc/(\\lambda k_B T) \\ll 1, Taylor expanding e^x \\approx 1 + x gives e^{hc/\\lambda k_B T} - 1 \\approx \\frac{hc}{\\lambda k_B T}. Substituting: I(\\lambda, T) \\to \\frac{2\\pi h c^2}{\\lambda^5 (hc/\\lambda k_B T)} = \\frac{2\\pi c k_B T}{\\lambda^4}, identically recovering Rayleigh-Jeans.",
+        statement: "The classical Rayleigh-Jeans law $I(\\lambda, T) = \\frac{2\\pi c k_B T}{\\lambda^4}$ predicts infinite radiant emission as $\\lambda \\to 0$ (the Ultraviolet Catastrophe). Max Planck resolved this failure by postulating that cavity atomic oscillators possess discrete quantized energy levels $E_n = n h f$ and exchange radiation in quanta of energy $E = hf$.",
+        proofOrDerivation: "### 1. Classical Rayleigh-Jeans Density:\nUsing classical standing-wave mode density $N(\\lambda) = \\frac{8\\pi}{\\lambda^4}$ and equipartition thermal energy $\\langle E \\rangle = k_B T$:\n$$u_{\\text{RJ}}(\\lambda) = \\frac{8\\pi k_B T}{\\lambda^4} \\implies \\lim_{\\lambda \\to 0} u_{\\text{RJ}}(\\lambda) = \\infty \\quad (\\text{UV Catastrophe})$$\n\n### 2. Planck's Quantum Quantization:\nAssuming discrete energy states $E_n = n h f$ ($n = 0, 1, 2, \\dots$), the Boltzmann statistical average energy is:\n$$\\langle E \\rangle = \\frac{\\sum_{n=0}^\\infty n h f e^{-nhf/k_B T}}{\\sum_{n=0}^\\infty e^{-nhf/k_B T}} = \\frac{hf}{e^{\\frac{hf}{k_B T}} - 1}$$\nMultiplying by mode density $N(\\lambda)$ gives Planck's Radiation Formula:\n$$u(\\lambda, T) = \\frac{8\\pi h c}{\\lambda^5 \\left(e^{\\frac{hc}{\\lambda k_B T}} - 1\\right)}$$\n\n### 3. Asymptotic Classical Recovery (Taylor Expansion):\nIn the long-wavelength classical limit ($\\lambda \\to \\infty$), the exponent is small: $\\frac{hc}{\\lambda k_B T} \\ll 1$.\nTaylor expanding $e^x \\approx 1 + x$:\n$$e^{\\frac{hc}{\\lambda k_B T}} - 1 \\approx 1 + \\frac{hc}{\\lambda k_B T} - 1 = \\frac{hc}{\\lambda k_B T}$$\nSubstituting into Planck's distribution:\n$$u(\\lambda, T) \\to \\frac{8\\pi h c}{\\lambda^5 \\left(\\frac{hc}{\\lambda k_B T}\\right)} = \\frac{8\\pi k_B T}{\\lambda^4}$$\nrecovering the classical Rayleigh-Jeans law identically, satisfying the Bohr Correspondence Principle!",
         keyFormulas: [
           "E_n = n h f \\quad (n = 1, 2, 3, \\dots)",
           "E_{\\text{photon}} = hf = \\frac{hc}{\\lambda} \\approx \\frac{1240}{\\lambda(\\text{nm})} \\text{ eV}",
@@ -39,10 +40,11 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s1-t3",
         title: "Einstein's Photoelectric Effect & Stopping Voltage",
-        statement: "Photoelectrons are ejected when incident photon energy exceeds metal work function ϕ = h f_c. K_max depends linearly on frequency f and is completely independent of intensity. Increasing intensity increases photon flux and saturation photocurrent I_s, but leaves stopping potential V_s invariant.",
+        statement: "Photoelectrons are ejected when incident photon energy exceeds the metal work function $\\phi = h f_c$. Maximum kinetic energy $K_{\\text{max}}$ depends linearly on frequency $f$ and is completely independent of light intensity. Increasing intensity increases photon flux and saturation photocurrent $I_s$, but leaves stopping potential $V_s$ invariant.",
+        proofOrDerivation: "### 1. Einstein's Quantum Energy Conservation:\nIncident light consists of discrete energy packets (photons) of energy $E = hf$.\nWhen an absorbed photon delivers its entire energy to a conduction electron:\n$$E_{\\text{photon}} = \\phi + K_{\\text{max}}$$\nwhere $\\phi$ is the metal work function and $K_{\\text{max}}$ is the maximum photoelectron kinetic energy.\n\n### 2. Stopping Potential Formulation:\nApplying an opposing electric potential $V_s$ that halts the fastest photoelectrons ($K_{\\text{max}} = e V_s$):\n$$e V_s = hf - \\phi \\implies V_s = \\left(\\frac{h}{e}\\right) f - \\frac{\\phi}{e}$$\nExpressed in terms of incident wavelength $\\lambda = c/f$:\n$$V_s = \\left(\\frac{hc}{e}\\right) \\frac{1}{\\lambda} - \\frac{\\phi}{e}$$\nThreshold / cut-off frequency $f_c$ and threshold wavelength $\\lambda_c$ (where $V_s = 0$):\n$$f_c = \\frac{\\phi}{h}, \\quad \\lambda_c = \\frac{hc}{\\phi}$$\nThe slope of the $V_s$ vs. $f$ line is universally $\\frac{h}{e} \\approx 4.14 \\times 10^{-15} \\text{ V}\\cdot\\text{s}$, constant for all metals.",
         keyFormulas: [
-          "E = hf = \\phi + K_{\\max}",
-          "K_{\\max} = e V_s = \\frac{1}{2} m v_{\\max}^2",
+          "E = hf = \\phi + K_{\\text{max}}",
+          "K_{\\text{max}} = e V_s = \\frac{1}{2} m v_{\\text{max}}^2",
           "V_s = \\frac{h}{e}f - \\frac{\\phi}{e} = \\frac{hc}{e}\\frac{1}{\\lambda} - \\frac{\\phi}{e}",
           "\\lambda_c = \\frac{hc}{\\phi} \\quad (\\text{Cut-off / Threshold wavelength})"
         ],
@@ -51,8 +53,8 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s1-t4",
         title: "Compton Scattering & Shift Derivation",
-        statement: "Scattering of energetic X-ray/γ-ray photons by stationary free electrons. Modeled as an elastic relativistic collision where both conservation of relativistic energy and momentum hold.",
-        proofOrDerivation: "Conservation of energy: hf + m_0 c^2 = hf' + m c^2 \\implies m c^2 = h(f - f') + m_0 c^2. Conservation of momentum: x-dir: \\frac{hf}{c} = \\frac{hf'}{c}\\cos\\theta + mv\\cos\\phi; y-dir: 0 = \\frac{hf'}{c}\\sin\\theta - mv\\sin\\phi. Squaring and subtracting relativistic invariant (pc)^2 = E^2 - E_0^2 yields: \\Delta\\lambda = \\lambda' - \\lambda = \\frac{h}{m_0 c}(1 - \\cos\\theta).",
+        statement: "Scattering of energetic X-ray/$\\gamma$-ray photons by stationary atomic electrons. Modeled as a relativistic elastic collision conserving both relativistic energy and four-momentum.",
+        proofOrDerivation: "### 1. Relativistic Energy Conservation:\nInitial photon energy $E = hf$ and electron rest energy $E_{e,0} = m_0 c^2$.\nAfter collision, scattered photon has energy $E' = hf'$ and electron has relativistic total energy $E_e$:\n$$hf + m_0 c^2 = hf' + \\sqrt{(p_e c)^2 + (m_0 c^2)^2}$$\n$$(p_e c)^2 = [h(f - f') + m_0 c^2]^2 - (m_0 c^2)^2 = h^2(f - f')^2 + 2h m_0 c^2 (f - f') \\quad \\text{--- (Eq. 1)}$$\n\n### 2. Relativistic Momentum Conservation:\nPhoton momentum is $p = hf/c$. Resolving vectors along $x$ and $y$ axes:\n• $x$-axis: $\\frac{hf}{c} = \\frac{hf'}{c}\\cos\\theta + p_e \\cos\\phi \\implies p_e c \\cos\\phi = h(f - f'\\cos\\theta)$\n• $y$-axis: $0 = \\frac{hf'}{c}\\sin\\theta - p_e \\sin\\phi \\implies p_e c \\sin\\phi = hf'\\sin\\theta$\n\n### 3. Combining Momentum Equations:\nSquaring and adding both momentum components ($(\\cos^2\\phi + \\sin^2\\phi) = 1$):\n$$(p_e c)^2 = h^2 \\left[ (f - f'\\cos\\theta)^2 + (f'\\sin\\theta)^2 \\right] = h^2 [f^2 + f'^2 - 2ff'\\cos\\theta] \\quad \\text{--- (Eq. 2)}$$\n\n### 4. Equating (Eq. 1) and (Eq. 2):\n$$h^2(f^2 - 2ff' + f'^2) + 2h m_0 c^2(f - f') = h^2(f^2 + f'^2 - 2ff'\\cos\\theta)$$\n$$2h m_0 c^2(f - f') = 2h^2 ff'(1 - \\cos\\theta)$$\nDividing by $2h m_0 c^2 f f'$ and using $\\frac{c}{f'} - \\frac{c}{f} = \\lambda' - \\lambda$:\n$$\\Delta\\lambda = \\lambda' - \\lambda = \\frac{h}{m_0 c}(1 - \\cos\\theta) = \\lambda_c (1 - \\cos\\theta)$$\nwhere $\\lambda_c = \\frac{h}{m_0 c} = 0.0243 \\text{ \\AA} = 2.43 \\text{ pm}$ is the Compton wavelength of the electron.",
         keyFormulas: [
           "\\Delta\\lambda = \\lambda' - \\lambda = \\frac{h}{m_0 c}(1 - \\cos\\theta) = \\lambda_c (1 - \\cos\\theta)",
           "\\lambda_c = \\frac{h}{m_0 c} = 0.0243 \\text{ \\AA} = 2.43 \\text{ pm} \\quad (\\text{for electron})",
@@ -253,10 +255,11 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s2-t1",
         title: "de Broglie Hypothesis & Davisson-Germer Experiment",
-        statement: "Matter possesses dual wave-particle properties. Any particle with momentum p has an associated de Broglie wavelength λ = h/p. Validated experimentally by Davisson & Germer through electron diffraction in nickel crystal lattice.",
+        statement: "Matter possesses dual wave-particle properties. Any particle with linear momentum $p$ has an associated de Broglie wavelength $\\lambda = h/p$. Validated experimentally by Davisson & Germer through electron diffraction in a nickel crystal lattice.",
+        proofOrDerivation: "### 1. de Broglie Wavelength Relation:\nFor photons, energy is $E = hf$ and momentum is $p = E/c = hf/c = h/\\lambda$. Louis de Broglie hypothesized nature's dual symmetry extends to all matter particles:\n$$\\lambda = \\frac{h}{p} = \\frac{h}{mv}$$\n\n### 2. Accelerated Particle from Rest:\nWhen a particle of mass $m$ and charge $q$ is accelerated through potential difference $V$:\n$$K = qV = \\frac{1}{2}mv^2 = \\frac{p^2}{2m} \\implies p = \\sqrt{2mqV}$$\nSubstituting $p$ into the de Broglie relation yields:\n$$\\lambda = \\frac{h}{\\sqrt{2mqV}}$$\nFor an electron ($m_e = 9.11 \\times 10^{-31} \\text{ kg}, q = 1.602 \\times 10^{-19} \\text{ C}, h = 6.626 \\times 10^{-34} \\text{ J}\\cdot\\text{s}$):\n$$\\lambda = \\frac{6.626 \\times 10^{-34}}{\\sqrt{2(9.11 \\times 10^{-31})(1.602 \\times 10^{-19})V}} = \\frac{1.228}{\\sqrt{V \\text{ (volts)}}} \\text{ nm} = \\sqrt{\\frac{150}{V}} \\text{ \\AA}$$",
         keyFormulas: [
-          "\\lambda = \\frac{h}{p} = \\frac{h}{mv} = \\frac{h}{\\sqrt{2m K.E.}} = \\frac{h}{\\sqrt{2mqV}}",
-          "\\text{For an electron: } \\lambda = \\frac{1.228}{\\sqrt{V \\text{ (volts)}}} \\text{ nm} = \\sqrt{\\frac{150}{V}} \\text{ \\AA}"
+          "\\lambda = \\frac{h}{p} = \\frac{h}{mv} = \\frac{h}{\\sqrt{2m K}} = \\frac{h}{\\sqrt{2mqV}}",
+          "\\lambda = \\frac{1.228}{\\sqrt{V \\text{ (volts)}}} \\text{ nm} = \\sqrt{\\frac{150}{V}} \\text{ \\AA} \\quad (\\text{for electron})"
         ],
         takeaway: "Macroscopic objects (like a baseball) have wavelengths ~10^-34 m, far smaller than any atomic nucleus, hence wave diffraction is completely unobservable."
       },
@@ -264,17 +267,18 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
         id: "s2-t2",
         title: "Heisenberg Uncertainty Principle",
         statement: "It is fundamentally impossible to measure both the coordinate position and conjugate linear momentum of a particle simultaneously with arbitrary precision.",
+        proofOrDerivation: "### 1. Single-Slit Wave Diffraction Derivation:\nConsider an electron wave passing through a narrow aperture slit of width $\\Delta y = w$. The first diffraction minimum occurs at angle $\\theta$:\n$$w \\sin\\theta = \\lambda \\implies \\Delta y \\sin\\theta = \\lambda$$\nThe transverse momentum uncertainty acquired by transmitted electrons is $\\Delta p_y \\approx p \\sin\\theta$:\n$$\\Delta y \\left(\\frac{\\Delta p_y}{p}\\right) \\approx \\lambda \\implies \\Delta y \\Delta p_y \\approx p\\lambda$$\nUsing de Broglie's relation $p\\lambda = h$:\n$$\\Delta y \\Delta p_y \\approx h \\ge \\frac{\\hbar}{2}$$\n\n### 2. General Statistical Formulation (Kennard Inequality):\nFor any quantum wavepacket, root-mean-square uncertainties satisfy:\n$$\\Delta x \\Delta p_x \\ge \\frac{\\hbar}{2}, \\quad \\Delta E \\Delta t \\ge \\frac{\\hbar}{2} \\quad \\left( \\hbar = \\frac{h}{2\\pi} = 1.054 \\times 10^{-34} \\text{ J}\\cdot\\text{s} \\right)$$",
         keyFormulas: [
-          "\\Delta x \\Delta p_x \\ge \\frac{\\hbar}{2} \\quad \\left(\\text{with } \\Delta p_x = m \\Delta v_x \\implies \\Delta x \\Delta v_x \\ge \\frac{\\hbar}{2m}\\right)",
-          "\\Delta E \\Delta t \\ge \\frac{\\hbar}{2} \\quad (\\hbar = \\frac{h}{2\\pi} = 1.054 \\times 10^{-34} \\text{ J}\\cdot\\text{s})"
+          "\\Delta x \\Delta p_x \\ge \\frac{\\hbar}{2} \\quad \\left(\\Delta p_x = m \\Delta v_x \\implies \\Delta x \\Delta v_x \\ge \\frac{\\hbar}{2m}\\right)",
+          "\\Delta E \\Delta t \\ge \\frac{\\hbar}{2} \\quad (\\hbar = 1.054 \\times 10^{-34} \\text{ J}\\cdot\\text{s})"
         ],
         takeaway: "Energy-time uncertainty explains the natural spectral line broadening ΔE in atomic transitions due to finite state lifetimes Δt."
       },
       {
         id: "s2-t3",
         title: "Time-Independent Schrödinger Equation (TISE) in 1D",
-        statement: "The fundamental wave equation of non-relativistic quantum mechanics governing stationary state wavefunctions Ψ(x).",
-        proofOrDerivation: "Total energy E = \\frac{p^2}{2m} + U(x). Using trial wave \\psi(x) = e^{ikx} with k = p/\\hbar: \\frac{d^2\\psi}{dx^2} = -k^2\\psi = -\\frac{p^2}{\\hbar^2}\\psi \\implies p^2\\psi = -\\hbar^2\\frac{d^2\\psi}{dx^2}. Substituting into energy equation: E\\psi = -\\frac{\\hbar^2}{2m}\\frac{d^2\\psi}{dx^2} + U(x)\\psi.",
+        statement: "The fundamental wave equation of non-relativistic quantum mechanics governing stationary state wavefunctions $\\psi(x)$.",
+        proofOrDerivation: "### 1. Energy Conservation & Wave Mechanics:\nTotal mechanical energy is the sum of kinetic and potential energy:\n$$E = \\frac{p^2}{2m} + U(x)$$\nFor a harmonic de Broglie plane wave $\\psi(x) = A e^{ikx} = A e^{i(p/\\hbar)x}$:\n$$\\frac{d\\psi}{dx} = \\frac{ip}{\\hbar}\\psi, \\quad \\frac{d^2\\psi}{dx^2} = -\\frac{p^2}{\\hbar^2}\\psi \\implies p^2\\psi = -\\hbar^2\\frac{d^2\\psi}{dx^2}$$\n\n### 2. Operator Eigenvalue Formulation:\nMultiplying the energy conservation expression by $\\psi(x)$:\n$$E\\psi(x) = \\frac{p^2}{2m}\\psi(x) + U(x)\\psi(x)$$\nSubstituting the operator differential $p^2\\psi$:\n$$-\\frac{\\hbar^2}{2m}\\frac{d^2\\psi(x)}{dx^2} + U(x)\\psi(x) = E\\psi(x)$$\nDefining Hamiltonian operator $\\hat{H} = -\\frac{\\hbar^2}{2m}\\frac{d^2}{dx^2} + U(x)$ gives eigenvalue form $\\hat{H}\\psi = E\\psi$.",
         keyFormulas: [
           "-\\frac{\\hbar^2}{2m}\\frac{d^2\\psi(x)}{dx^2} + U(x)\\psi(x) = E\\psi(x)",
           "\\int_{-\\infty}^{\\infty} |\\psi(x)|^2 dx = 1 \\quad (\\text{Normalization condition})"
@@ -284,8 +288,8 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s2-t4",
         title: "Infinite Square Well (Particle in a Rigid Box 0 ≤ x ≤ L)",
-        statement: "A particle confined between infinitely rigid walls where U(x) = 0 for 0 ≤ x ≤ L and U = ∞ otherwise. Boundary conditions require Ψ(0) = 0 and Ψ(L) = 0.",
-        proofOrDerivation: "Inside well: \\frac{d^2\\psi}{dx^2} + k^2\\psi = 0 where k = \\sqrt{2mE}/\\hbar. General solution: \\psi(x) = A\\sin(kx) + B\\cos(kx). At x = 0: \\psi(0) = B = 0. At x = L: \\psi(L) = A\\sin(kL) = 0 \\implies k_n L = n\\pi \\implies k_n = \\frac{n\\pi}{L}. Normalizing: \\int_0^L A^2\\sin^2\\left(\\frac{n\\pi x}{L}\\right)dx = 1 \\implies A = \\sqrt{\\frac{2}{L}}.",
+        statement: "A particle confined between infinitely rigid impenetrable walls ($U(x) = 0$ for $0 \\le x \\le L$ and $U = \\infty$ otherwise). Boundary conditions require $\\psi(0) = 0$ and $\\psi(L) = 0$.",
+        proofOrDerivation: "### 1. Differential Equation Inside Well ($U=0$):\n$$\\frac{d^2\\psi}{dx^2} + k^2\\psi = 0 \\quad \\text{where } k = \\frac{\\sqrt{2mE}}{\\hbar}$$\nGeneral harmonic solution:\n$$\\psi(x) = A\\sin(kx) + B\\cos(kx)$$\n\n### 2. Imposing Boundary Conditions:\n• At $x = 0$: $\\psi(0) = B = 0 \\implies \\psi(x) = A\\sin(kx)$\n• At $x = L$: $\\psi(L) = A\\sin(kL) = 0$\nSince $A \\ne 0$, $kL$ must be an integer multiple of $\\pi$:\n$$k_n L = n\\pi \\implies k_n = \\frac{n\\pi}{L} \\quad (n = 1, 2, 3, \\dots)$$\n\n### 3. Energy Quantization:\n$$E_n = \\frac{\\hbar^2 k_n^2}{2m} = \\frac{\\hbar^2 n^2 \\pi^2}{2mL^2} = \\frac{n^2 h^2}{8mL^2} = n^2 E_1$$\n\n### 4. Wavefunction Normalization:\n$$\\int_0^L |\\psi(x)|^2 dx = A^2 \\int_0^L \\sin^2\\left(\\frac{n\\pi x}{L}\\right)dx = A^2 \\left(\\frac{L}{2}\\right) = 1 \\implies A = \\sqrt{\\frac{2}{L}}$$\n$$\\psi_n(x) = \\sqrt{\\frac{2}{L}} \\sin\\left(\\frac{n\\pi x}{L}\\right)$$",
         keyFormulas: [
           "\\psi_n(x) = \\sqrt{\\frac{2}{L}} \\sin\\left(\\frac{n\\pi x}{L}\\right)",
           "E_n = \\frac{n^2 \\pi^2 \\hbar^2}{2mL^2} = \\frac{n^2 h^2}{8mL^2} = n^2 E_1 \\quad (n = 1, 2, 3, \\dots)",
@@ -297,7 +301,8 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s2-t5",
         title: "Quantum Tunneling Through a Square Barrier",
-        statement: "When a particle with energy E < U_0 strikes a barrier of height U_0 and width a, there is a non-zero transmission probability T due to exponential wave penetration.",
+        statement: "When a particle with kinetic energy $E < U_0$ strikes a finite rectangular potential barrier of height $U_0$ and thickness $a$, there is a non-zero probability of tunneling through due to wave penetration.",
+        proofOrDerivation: "### 1. Wavefunction in Barrier Region ($0 < x < a$):\nSince $E < U_0$, TISE inside the barrier is:\n$$\\frac{d^2\\psi}{dx^2} - \\gamma^2\\psi = 0 \\quad \\text{where } \\gamma = \\frac{\\sqrt{2m(U_0 - E)}}{\\hbar}$$\nThe solution consists of real decaying and growing exponentials: $\\psi_{II}(x) = C e^{-\\gamma x} + D e^{\\gamma x}$.\n\n### 2. Transmission Coefficient Derivation:\nMatching boundary conditions (continuity of $\\psi$ and $\\frac{d\\psi}{dx}$) at $x=0$ and $x=a$ for wide/thick barriers ($\\gamma a \\gg 1$):\n$$T = \\frac{|F|^2}{|A|^2} \\approx 16 \\frac{E}{U_0} \\left(1 - \\frac{E}{U_0}\\right) e^{-2\\gamma a} \\approx e^{-2\\gamma a}$$\nPenetration depth $\\delta = \\frac{1}{2\\gamma}$ characterizes the distance over which probability drops to $1/e$.",
         keyFormulas: [
           "T \\approx e^{-2\\gamma a} \\quad \\text{where } \\gamma = \\frac{\\sqrt{2m(U_0 - E)}}{\\hbar}",
           "\\delta = \\frac{1}{2\\gamma} \\quad (\\text{Penetration depth})",
@@ -474,45 +479,48 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s3-t1",
         title: "Bohr Model Postulates for Hydrogen Atom",
-        statement: "1. Electrons orbit the nucleus in non-radiating circular orbits under Coulomb force ke²/r² = m v²/r.\n2. Orbital angular momentum is quantized: L = m v r = n ħ.\n3. Radiation is emitted/absorbed during discrete transitions: E_i - E_f = hf.",
+        statement: "1. Electrons orbit the positive nucleus in non-radiating stationary circular orbits under Coulomb force $\\frac{k e^2}{r^2} = \\frac{m v^2}{r}$.\n2. Orbital angular momentum is quantized: $L = m v r = n \\hbar$.\n3. Radiation is emitted/absorbed during discrete quantum transitions: $E_i - E_f = hf$.",
+        proofOrDerivation: "### 1. Derivation of Quantized Orbit Radii $r_n$:\nCoulomb attraction provides the necessary centripetal acceleration:\n$$\\frac{k e^2}{r^2} = \\frac{m v^2}{r} \\implies m v^2 = \\frac{k e^2}{r} \\quad \\left(k = \\frac{1}{4\\pi\\varepsilon_0}\\right)$$\nFrom Bohr's angular momentum postulate $L = mvr = n\\hbar \\implies v = \\frac{n\\hbar}{mr}$.\nSubstituting $v$ into the force equation:\n$$m \\left(\\frac{n\\hbar}{mr}\\right)^2 = \\frac{k e^2}{r} \\implies \\frac{n^2 \\hbar^2}{mr} = k e^2$$\n$$r_n = \\frac{n^2 \\hbar^2}{m k e^2} = n^2 a_0 \\quad (n = 1, 2, 3, \\dots)$$\nwhere $a_0 = \\frac{\\hbar^2}{m k e^2} = 0.0529 \\text{ nm} = 0.529 \\text{ \\AA}$ is the Bohr radius.\n\n### 2. Derivation of Quantized Energy Levels $E_n$:\nTotal mechanical energy is the sum of orbital kinetic and electrostatic potential energy:\n$$E = K + U = \\frac{1}{2}m v^2 - \\frac{k e^2}{r} = \\frac{k e^2}{2r} - \\frac{k e^2}{r} = -\\frac{k e^2}{2r}$$\nSubstituting $r_n$:\n$$E_n = -\\frac{k e^2}{2\\left(\\frac{n^2 \\hbar^2}{m k e^2}\\right)} = -\\frac{m k^2 e^4}{2\\hbar^2}\\frac{1}{n^2} = -\\frac{13.6 \\text{ eV}}{n^2}$$",
         keyFormulas: [
-          "r_n = n^2 a_0 = n^2 (0.0529 \\text{ nm})",
-          "E_n = -\\frac{13.6 \\text{ eV}}{n^2}",
-          "\\text{Ionization Energy from ground state } (n=1) = -E_1 = +13.6 \\text{ eV}"
+          "r_n = n^2 a_0 = n^2 (0.0529 \\text{ nm}) = n^2 (0.529 \\text{ \\AA})",
+          "E_n = -\\frac{13.6 \\text{ eV}}{n^2} \\quad (n = 1, 2, 3, \\dots)",
+          "\\text{Ground state ionization energy } E_{\\text{ion}} = -E_1 = +13.6 \\text{ eV}"
         ],
         takeaway: "The radius scales quadratically with n (r ∝ n²), while the energy is negative and scales inversely as 1/n²."
       },
       {
         id: "s3-t2",
         title: "Rydberg Formula & The Hydrogen Spectral Series",
-        statement: "Transitions between higher level n_i and lower level n_f emit a photon with wavenumber given by Rydberg formula.",
+        statement: "Transitions between an initial higher orbital state $n_i$ and a final lower orbital state $n_f$ ($n_i > n_f$) emit a photon whose wavenumber is governed by the Rydberg formula.",
+        proofOrDerivation: "### 1. Transition Energy Conservation:\n$$\\Delta E = E_i - E_f = hf = \\frac{hc}{\\lambda}$$\nSubstituting Bohr's energy equation $E_n = -\\frac{m k^2 e^4}{2\\hbar^2}\\frac{1}{n^2}$:\n$$\\frac{hc}{\\lambda} = \\left(-\\frac{13.6}{n_i^2}\\right) - \\left(-\\frac{13.6}{n_f^2}\\right) = 13.6 \\text{ eV} \\left(\\frac{1}{n_f^2} - \\frac{1}{n_i^2}\\right)$$\nDividing by $hc$:\n$$\\frac{1}{\\lambda} = \\frac{m k^2 e^4}{4\\pi c \\hbar^3} \\left(\\frac{1}{n_f^2} - \\frac{1}{n_i^2}\\right) = R_H \\left(\\frac{1}{n_f^2} - \\frac{1}{n_i^2}\\right)$$\nwhere $R_H = \\frac{m k^2 e^4}{4\\pi c \\hbar^3} = 1.09737 \\times 10^7 \\text{ m}^{-1}$ is the Rydberg constant.",
         keyFormulas: [
           "\\frac{1}{\\lambda} = R_H \\left(\\frac{1}{n_f^2} - \\frac{1}{n_i^2}\\right) \\quad (R_H = 1.097 \\times 10^7 \\text{ m}^{-1})",
-          "\\text{Lyman Series (UV): } n_f = 1, \\, n_i = 2, 3, 4, \\dots",
-          "\\text{Balmer Series (Visible): } n_f = 2, \\, n_i = 3, 4, 5, \\dots \\quad (H_\\alpha = 656.3 \\text{ nm}, H_\\beta = 486.1 \\text{ nm})",
-          "\\text{Paschen Series (IR): } n_f = 3, \\, n_i = 4, 5, 6, \\dots",
-          "\\text{Brackett (IR): } n_f = 4; \\quad \\text{Pfund (IR): } n_f = 5; \\quad \\text{Humphreys (IR): } n_f = 6"
+          "\\text{Lyman (UV): } n_f = 1, \\quad n_i = 2, 3, 4, \\dots",
+          "\\text{Balmer (Visible): } n_f = 2, \\quad n_i = 3, 4, 5, \\dots \\quad (H_\\alpha = 656.3 \\text{ nm})",
+          "\\text{Paschen (IR): } n_f = 3; \\quad \\text{Brackett (IR): } n_f = 4; \\quad \\text{Pfund (IR): } n_f = 5"
         ],
         takeaway: "Balmer series was historically discovered first because all its lines lie in the visible light range (400 nm to 700 nm)!"
       },
       {
         id: "s3-t3",
         title: "The Four Quantum Numbers & Space Quantization",
-        statement: "Atomic states are fully described by (n, ℓ, m_ℓ, m_s):\n• Principal n (1, 2, 3...): determines shell and total energy.\n• Orbital ℓ (0 to n-1): determines orbital angular momentum L = \\sqrt{\\ell(\\ell+1)}\\hbar and shape (s, p, d, f).\n• Magnetic m_ℓ (-ℓ to +ℓ): 2ℓ+1 orientations in space, L_z = m_ℓ ħ, cos θ = m_ℓ / \\sqrt{\\ell(\\ell+1)}.\n• Spin m_s (±1/2): intrinsic angular momentum S_z = ±ħ/2.",
+        statement: "Atomic states in 3D are completely characterized by four quantum numbers $(n, \\ell, m_\\ell, m_s)$:\n• Principal $n$ ($1, 2, 3\\dots$): Shell number and gross energy scale.\n• Orbital $\\ell$ ($0$ to $n-1$): Magnitude of orbital angular momentum $L = \\sqrt{\\ell(\\ell+1)}\\hbar$.\n• Magnetic $m_\\ell$ ($-\\ell$ to $+\\ell$): Component along quantization $z$-axis $L_z = m_\\ell \\hbar$.\n• Spin $m_s$ ($\\pm 1/2$): Intrinsic electron spin $S_z = \\pm \\frac{1}{2}\\hbar$.",
+        proofOrDerivation: "### 1. Space Quantization of Angular Momentum:\nThe projection of angular momentum $\\vec{L}$ onto an external magnetic field ($z$-axis) is restricted to discrete values:\n$$L_z = m_\\ell \\hbar \\quad \\text{where } m_\\ell \\in \\{-\\ell, -\\ell+1, \\dots, 0, \\dots, +\\ell\\}$$\nSince $|\vec{L}| = \\sqrt{\\ell(\\ell+1)}\\hbar$, the orientation angle $\\theta$ is quantized:\n$$\\cos\\theta = \\frac{L_z}{|\\vec{L}|} = \\frac{m_\\ell \\hbar}{\\sqrt{\\ell(\\ell+1)}\\hbar} = \\frac{m_\\ell}{\\sqrt{\\ell(\\ell+1)}}$$\nNotice that because $|m_\\ell| \\le \\ell < \\sqrt{\\ell(\\ell+1)}$, $\\cos\\theta < 1$. The vector $\\vec{L}$ can never align perfectly parallel to the $z$-axis (consequence of Heisenberg uncertainty $\\Delta L_x \\Delta L_y \\ge \\frac{\\hbar}{2}|\\langle L_z \\rangle|$).",
         keyFormulas: [
-          "L = \\sqrt{\\ell(\\ell+1)}\\hbar",
+          "L = \\sqrt{\\ell(\\ell+1)}\\hbar, \\quad L_z = m_\\ell \\hbar",
           "\\cos\\theta = \\frac{m_\\ell}{\\sqrt{\\ell(\\ell+1)}}",
-          "\\text{Total states per shell } n = 2n^2"
+          "\\text{Total orbital states per shell } n = 2n^2"
         ],
         takeaway: "For ℓ = 0 (s state), L = 0. The electron cloud is spherically symmetric with no fundamental axis of revolution."
       },
       {
         id: "s3-t4",
         title: "Pauli Exclusion Principle, Hund's Rule & X-Ray Spectra",
-        statement: "• Pauli Exclusion: No two electrons in an atom can have the same 4 quantum numbers (n, ℓ, m_ℓ, m_s).\n• Hund's Rule: Electrons remain unpaired with parallel spins whenever possible.\n• Characteristic X-Rays: Energetic electron knocks out K-shell electron; vacancy filled from L shell gives K_α (energy ~ (Z-1)² × 13.6 eV).\n• Continuous Bremsstrahlung: Deceleration of high-speed electrons near target nucleus produces continuous spectrum with cut-off limit λ_min = hc / (eV_0).",
+        statement: "• Pauli Exclusion: No two electrons in an atom can have the same four quantum numbers $(n, \\ell, m_\\ell, m_s)$.\n• Characteristic X-Rays: Bombarding electrons eject an inner-shell core electron; transition of an outer electron fills the vacancy emitting a characteristic X-ray photon.\n• Continuous Bremsstrahlung: Deceleration of incoming electrons near heavy target nuclei emits continuous radiation with a short-wavelength limit $\\lambda_{\\text{min}}$.",
+        proofOrDerivation: "### 1. Moseley's Law for Characteristic $K_\\alpha$ X-Rays:\nWhen a vacancy in the $K$-shell ($n=1$) is filled by an electron transition from the $L$-shell ($n=2$):\nThe effective nuclear charge seen by the transitioning electron is shielded by the remaining $1s$ electron: $Z_{\\text{eff}} = Z - 1$.\nUsing Bohr's formula for a single electron in a screened nucleus of charge $(Z-1)e$:\n$$\\Delta E_{K_\\alpha} = (Z - 1)^2 (13.6 \\text{ eV}) \\left(\\frac{1}{1^2} - \\frac{1}{2^2}\\right) = \\frac{3}{4} (13.6 \\text{ eV}) (Z - 1)^2 = (10.2 \\text{ eV})(Z - 1)^2$$\nFrequency $\\sqrt{f} = C(Z - 1)$, establishing Moseley's atomic number law.\n\n### 2. Duane-Hunt Law for Bremsstrahlung Cut-Off $\\lambda_{\\text{min}}$:\nMaximum photon energy occurs when the projectile electron gives up all its kinetic energy $K = e V_0$ in a single deceleration collision:\n$$hf_{\\text{max}} = \\frac{hc}{\\lambda_{\\text{min}}} = e V_0 \\implies \\lambda_{\\text{min}} = \\frac{hc}{e V_0} = \\frac{1240}{V_0 \\text{ (volts)}} \\text{ nm}$$",
         keyFormulas: [
-          "\\lambda_{\\min} = \\frac{hc}{eV_0} = \\frac{1240}{V_0 \\text{ (volts)}} \\text{ nm}",
-          "\\Delta E_{K_\\alpha} = E_K - E_L \\approx (Z - 1)^2 (13.6 \\text{ eV})\\left(\\frac{1}{1^2} - \\frac{1}{2^2}\\right)"
+          "\\lambda_{\\text{min}} = \\frac{hc}{eV_0} = \\frac{1240}{V_0 \\text{ (volts)}} \\text{ nm}",
+          "\\Delta E_{K_\\alpha} = \\frac{3}{4}(13.6 \\text{ eV})(Z - 1)^2 = (10.2 \\text{ eV})(Z - 1)^2"
         ],
         takeaway: "Bremsstrahlung cut-off λ_min depends solely on tube voltage V_0 and is independent of target material!"
       }
@@ -676,28 +684,32 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
     theoryParts: [
       {
         id: "s4-t1",
-        title: "Einstein's Postulates & Failure of Galilean Relativity",
-        statement: "1. The Principle of Relativity: The laws of physics are identical in all inertial reference frames.\n2. Invariance of the Speed of Light: The speed of light in vacuum c is a universal constant (3 × 10^8 m/s), independent of the motion of the source or observer.\n• The Michelson-Morley null experiment definitively disproved the luminiferous aether.",
+        title: "Einstein's Postulates & Lorentz Transformation",
+        statement: "1. The Principle of Relativity: The laws of physics are identical in all inertial frames.\n2. Constancy of Speed of Light: Light propagates in vacuum with definite speed $c$, independent of the state of motion of the emitting body.\n• Galilean relativity ($x' = x - vt, t'=t$) fails at high velocities ($v \\to c$). It is replaced by the Lorentz Transformations.",
+        proofOrDerivation: "### 1. Invariance of Spherical Wavefronts:\nAssume linear coordinate transformations between frame $S$ and frame $S'$ moving at speed $v$ along $+x$:\n$$x' = \\gamma (x - vt), \\quad x = \\gamma (x' + vt')$$\nAt $t = t' = 0$, a spherical light wave emitted at the origin satisfies:\n$$x^2 = c^2 t^2 \\implies x = ct, \\quad x'^2 = c^2 t'^2 \\implies x' = ct'$$\nSubstituting $x = ct$ and $x' = ct'$:\n$$ct' = \\gamma(c - v)t \\quad \\text{and} \\quad ct = \\gamma(c + v)t'$$\nMultiplying both equations:\n$$c^2 t t' = \\gamma^2 (c^2 - v^2) t t' \\implies \\gamma^2 = \\frac{c^2}{c^2 - v^2} = \\frac{1}{1 - v^2/c^2}$$\n$$\\gamma = \\frac{1}{\\sqrt{1 - \\frac{v^2}{c^2}}}$$\nEliminating $x'$ gives the time transformation: $t' = \\gamma\\left(t - \\frac{vx}{c^2}\\right)$.",
         keyFormulas: [
-          "\\text{Galilean (fails at } v \\to c\\text{)}: x' = x - vt, \\quad t' = t, \\quad u' = u - v",
-          "\\gamma = \\frac{1}{\\sqrt{1 - v^2/c^2}} \\ge 1 \\quad (\\text{Lorentz factor})"
+          "\\gamma = \\frac{1}{\\sqrt{1 - v^2/c^2}} \\ge 1 \\quad (\\text{Lorentz factor})",
+          "x' = \\gamma(x - vt), \\quad y' = y, \\quad z' = z",
+          "t' = \\gamma\\left(t - \\frac{vx}{c^2}\\right)"
         ],
         takeaway: "Simultaneity is not absolute: events simultaneous in one inertial frame are NOT simultaneous in another moving frame!"
       },
       {
         id: "s4-t2",
         title: "Time Dilation & The Proper Time Interval",
-        statement: "Clocks in motion run slow relative to a stationary observer. The proper time interval Δt_p is the time interval measured by an observer in whose frame both events occur at the exact same spatial location.",
+        statement: "Clocks in motion run slow relative to a stationary observer. The proper time interval $\\Delta t_p$ is the time interval measured by an observer in whose frame both events occur at the exact same spatial location.",
+        proofOrDerivation: "### 1. Transverse Light-Clock Derivation:\nConsider two parallel mirrors separated by proper distance $d$. In the rest frame $S'$ of the clock, a light pulse travels to the top mirror and back in proper time:\n$$\\Delta t_p = \\frac{2d}{c} \\implies d = \\frac{c \\Delta t_p}{2}$$\nIn laboratory frame $S$, the clock moves horizontally at speed $v$ during time $\\Delta t$. The mirrors advance by distance $v\\Delta t$.\nBy Pythagorean theorem on the triangular light path:\n$$\\left(\\frac{c\\Delta t}{2}\\right)^2 = d^2 + \\left(\\frac{v\\Delta t}{2}\\right)^2$$\nSubstitute $d = \\frac{c\\Delta t_p}{2}$:\n$$\\frac{c^2(\\Delta t)^2}{4} = \\frac{c^2(\\Delta t_p)^2}{4} + \\frac{v^2(\\Delta t)^2}{4}$$\n$$(c^2 - v^2)(\\Delta t)^2 = c^2(\\Delta t_p)^2 \\implies (\\Delta t)^2 = \\frac{(\\Delta t_p)^2}{1 - v^2/c^2}$$\n$$\\Delta t = \\frac{\\Delta t_p}{\\sqrt{1 - \\frac{v^2}{c^2}}} = \\gamma \\Delta t_p \\ge \\Delta t_p$$",
         keyFormulas: [
           "\\Delta t = \\gamma \\Delta t_p = \\frac{\\Delta t_p}{\\sqrt{1 - v^2/c^2}} \\ge \\Delta t_p",
-          "\\text{Twin Paradox: Samer travels at } 0.8c \\implies \\gamma = 1.667 \\implies 1/\\gamma = 0.6. \\text{ Trip is 30 yr for Samer, 50 yr for Rana!}"
+          "\\Delta t_p = \\text{Proper time (shortest measured time between events)}"
         ],
         takeaway: "Proper time is ALWAYS the shortest measured time interval between two events."
       },
       {
         id: "s4-t3",
         title: "Relativity of Length (Lorentz Contraction)",
-        statement: "The length of an object measured in a frame moving relative to it is contracted along the direction of motion. Dimensions perpendicular to motion (y, z) are completely unaffected.",
+        statement: "The length of an object measured in a frame moving relative to it is contracted along the direction of motion. Dimensions perpendicular to motion ($y, z$) are completely unaffected.",
+        proofOrDerivation: "### 1. Moving Rod Time-of-Flight Derivation:\nConsider a rod of proper length $L_p$ resting in stationary frame $S$. An observer in frame $S'$ travels past the rod at speed $v$.\nThe time required for the rod to pass the observer in $S'$ is measured by a single clock at that location, hence it represents proper time $\\Delta t_p$:\n$$L = v \\Delta t_p$$\nFrom time dilation, clocks in $S$ measure time $\\Delta t = \\gamma \\Delta t_p \\implies \\Delta t_p = \\frac{\\Delta t}{\\gamma}$.\nIn frame $S$, the length is $L_p = v \\Delta t$. Substituting $\\Delta t = L_p / v$:\n$$L = v \\left(\\frac{L_p / v}{\\gamma}\\right) = \\frac{L_p}{\\gamma} = L_p \\sqrt{1 - \\frac{v^2}{c^2}} \\le L_p$$",
         keyFormulas: [
           "L = \\frac{L_p}{\\gamma} = L_p \\sqrt{1 - \\frac{v^2}{c^2}} \\le L_p",
           "L_p = \\text{Proper length (measured in object's rest frame)}"
@@ -707,7 +719,8 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s4-t4",
         title: "Relativistic Velocity Addition",
-        statement: "In special relativity, velocities do not add linearly. No physical object can ever exceed or equal the speed of light c.",
+        statement: "In special relativity, velocities do not add linearly. No physical object can ever exceed or equal the speed of light $c$.",
+        proofOrDerivation: "### 1. Differential Lorentz Boost Derivation:\nFrom Lorentz coordinate transformations:\n$$x = \\gamma(x' + v t'), \\quad t = \\gamma\\left(t' + \\frac{v x'}{c^2}\\right)$$\nTaking differentials:\n$$dx = \\gamma(dx' + v dt'), \\quad dt = \\gamma\\left(dt' + \\frac{v dx'}{c^2}\\right)$$\nDividing $dx$ by $dt$ to obtain velocity $u_x = \\frac{dx}{dt}$ in frame $S$:\n$$u_x = \\frac{\\gamma(dx' + v dt')}{\\gamma\\left(dt' + \\frac{v dx'}{c^2}\\right)} = \\frac{\\frac{dx'}{dt'} + v}{1 + \\frac{v}{c^2}\\frac{dx'}{dt'}} = \\frac{u'_x + v}{1 + \\frac{u'_x v}{c^2}}$$\nSimilarly, the inverse transformation is: $u'_x = \\frac{u_x - v}{1 - \\frac{u_x v}{c^2}}$.",
         keyFormulas: [
           "u_x = \\frac{u'_x + v}{1 + \\frac{u'_x v}{c^2}} \\quad \\text{and} \\quad u'_x = \\frac{u_x - v}{1 - \\frac{u_x v}{c^2}}"
         ],
@@ -716,12 +729,11 @@ export const MASTERCLASS_SHEETS: MasterclassSheet[] = [
       {
         id: "s4-t5",
         title: "Relativistic Mass, Momentum & Energy Equivalence",
-        statement: "As v → c, mass increases by factor γ. Total relativistic energy E equals the sum of rest energy E_0 and kinetic energy E_k.",
+        statement: "As $v \\to c$, relativistic momentum scales as $p = \\gamma m_0 v$. Total relativistic energy $E = \\gamma m_0 c^2$ equals the sum of rest energy $E_0 = m_0 c^2$ and kinetic energy $E_k$.",
+        proofOrDerivation: "### 1. Derivation of Energy-Momentum Invariant:\nDefinitions: $E = \\gamma m_0 c^2$ and $p = \\gamma m_0 v \\implies pc = \\gamma m_0 v c$.\nCalculate difference of squares:\n$$E^2 - (pc)^2 = (\\gamma m_0 c^2)^2 - (\\gamma m_0 v c)^2 = \\gamma^2 m_0^2 c^4 \\left(1 - \\frac{v^2}{c^2}\\right)$$\nSince $\\gamma^2 = \\frac{1}{1 - v^2/c^2}$, $\\gamma^2\\left(1 - \\frac{v^2}{c^2}\\right) = 1$.\nTherefore:\n$$E^2 - (pc)^2 = (m_0 c^2)^2 \\implies E^2 = (pc)^2 + (m_0 c^2)^2$$\n\n### 2. Kinetic Energy Formulation:\n$$E_k = E - E_0 = \\gamma m_0 c^2 - m_0 c^2 = (\\gamma - 1)m_0 c^2$$\nFor $v \\ll c$, binomial expansion $\\gamma = (1 - v^2/c^2)^{-1/2} \\approx 1 + \\frac{1}{2}\\frac{v^2}{c^2}$, giving $E_k \\approx \\frac{1}{2}m_0 v^2$, recovering classical Newtonian mechanics.",
         keyFormulas: [
-          "m = \\gamma m_0 = \\frac{m_0}{\\sqrt{1 - v^2/c^2}}",
-          "p = \\gamma m_0 v",
-          "E = mc^2 = \\gamma m_0 c^2",
-          "E_k = E - E_0 = (\\gamma - 1)m_0 c^2",
+          "E = \\gamma m_0 c^2 = mc^2, \\quad p = \\gamma m_0 v",
+          "E_k = (\\gamma - 1)m_0 c^2 = E - E_0",
           "E^2 = (pc)^2 + (m_0 c^2)^2 \\quad (\\text{Relativistic Invariant Relation})"
         ],
         takeaway: "For a massless photon (m_0 = 0), E = pc. For an electron at rest, E_0 = 0.511 MeV."

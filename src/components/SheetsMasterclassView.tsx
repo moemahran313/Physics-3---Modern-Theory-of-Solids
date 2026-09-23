@@ -222,6 +222,8 @@ interface TheoryCardProps {
 }
 
 const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
+  const [isDerivationOpen, setIsDerivationOpen] = useState(true);
+
   return (
     <div className="mobile-optimized-card p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-3.5 h-full">
       <div className="space-y-3">
@@ -247,12 +249,37 @@ const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
 
         {/* Official Proof / Derivation */}
         {item.proofOrDerivation && (
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-950/90 border border-indigo-900/40 text-xs text-slate-200 space-y-2 shadow-inner">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-wider font-mono">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <span>Official Proof / Derivation:</span>
+          <div className="rounded-xl bg-slate-950/95 border border-indigo-900/50 shadow-inner overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-indigo-950/40 border-b border-indigo-900/40">
+              <button
+                onClick={() => setIsDerivationOpen(!isDerivationOpen)}
+                className="flex items-center gap-2 text-left group"
+                aria-expanded={isDerivationOpen}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider font-mono group-hover:text-indigo-200 transition-colors">
+                  Official Proof & Derivation
+                </span>
+                {isDerivationOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-indigo-400" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-indigo-400" />
+                )}
+              </button>
+              <button
+                onClick={() => onCopy(item.proofOrDerivation!, `${item.id}-proof`)}
+                className="p-1 rounded-md text-slate-400 hover:text-indigo-200 hover:bg-indigo-900/40 transition-colors shrink-0"
+                title="Copy official derivation LaTeX"
+                aria-label="Copy derivation"
+              >
+                {copiedId === `${item.id}-proof` ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+              </button>
             </div>
-            <div className="overflow-x-auto max-w-full text-slate-300">
+            <div className={`p-3 sm:p-3.5 text-xs text-slate-200 overflow-x-auto max-w-full ${isDerivationOpen ? "block" : "hidden print:block"}`}>
               <FormattedContent content={item.proofOrDerivation} />
             </div>
           </div>
@@ -265,7 +292,7 @@ const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
           </span>
           <div className="space-y-1.5">
             {item.keyFormulas.map((formula, idx) => (
-              <div key={idx} className="px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800/80 overflow-x-auto max-w-full">
+              <div key={idx} className="px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800/80 overflow-x-auto max-w-full text-center scrollbar-none">
                 <MathView math={formula} displayMode={true} />
               </div>
             ))}

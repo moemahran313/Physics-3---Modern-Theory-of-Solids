@@ -43,9 +43,10 @@ export const LaTeXRenderer: React.FC<LaTeXRendererProps> = ({
       return katex.renderToString(cleanMath, {
         displayMode: isBlock,
         throwOnError: false,
-        output: "htmlAndMathml",
+        output: "html",
         strict: false,
         trust: true,
+        minRuleThickness: 0.05,
       });
     } catch {
       // Graceful fallback without breaking layout
@@ -81,7 +82,7 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
-// Helper function to auto-wrap bare LaTeX expressions with $ if not already enclosed
+// Helper function to safely auto-wrap bare LaTeX expressions without swallowing English text
 export function normalizeMathText(text: string): string {
   if (!text) return "";
   
@@ -90,18 +91,24 @@ export function normalizeMathText(text: string): string {
     return text;
   }
 
-  // If text contains TeX macros like \frac, \lambda, \to, \implies, etc. outside $,
-  // wrap valid math clauses in $
-  return text.replace(
-    /((?:[A-Za-z0-9_()+\-*/=^|.,\s]*\\[A-Za-z]+[A-Za-z0-9_()+\-*/=^|.,\s]*)+)/g,
-    (match) => {
-      const trimmed = match.trim();
-      if (trimmed.includes("\\") && trimmed.length > 1) {
-        return `$${trimmed}$`;
-      }
-      return match;
+  // If text does NOT have $, process line-by-line:
+  const lines = text.split("\n");
+  const processed = lines.map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+
+    // Check if the whole line is a math equation (starts with \ or contains formula with =)
+    if (/^\\[a-zA-Z]+/.test(trimmed) && !/\b(the|is|in|of|and|for|with|from)\b/i.test(trimmed)) {
+      return `$$${trimmed}$$`;
     }
-  );
+
+    // Wrap single LaTeX commands with their arguments/subscripts, e.g. \lambda_{\text{max}}, \frac{a}{b}, \hbar
+    return line.replace(/(\\[a-zA-Z]+(?:\{[^{}]*\}|_[a-zA-Z0-9{}_^]+|\^[a-zA-Z0-9{}_^]+)*)/g, (match) => {
+      return `$${match}$`;
+    });
+  });
+
+  return processed.join("\n");
 }
 
 /**
@@ -201,6 +208,31 @@ export const FormattedContent: React.FC<{ content: string; className?: string }>
   return <div className={`space-y-1 ${className}`}>{renderedBlocks}</div>;
 };
 
+function renderPlainTextWithFormatting(text: string, baseKey: number | string): React.ReactNode[] {
+  const segments: React.ReactNode[] = [];
+  const boldRegex = /\*\*([^*]+)\*\*/g;
+  let lastIdx = 0;
+  let bMatch: RegExpExecArray | null;
+
+  while ((bMatch = boldRegex.exec(text)) !== null) {
+    if (bMatch.index > lastIdx) {
+      segments.push(text.substring(lastIdx, bMatch.index));
+    }
+    segments.push(
+      <strong key={`${baseKey}-b-${bMatch.index}`} className="font-semibold text-white">
+        {bMatch[1]}
+      </strong>
+    );
+    lastIdx = boldRegex.lastIndex;
+  }
+
+  if (lastIdx < text.length) {
+    segments.push(text.substring(lastIdx));
+  }
+
+  return segments;
+}
+
 /**
  * Tokenizes text and parses inline $math$ and $$block$$ math expressions
  */
@@ -212,7 +244,8 @@ export function renderInlineMathText(text: string): React.ReactNode[] {
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.substring(lastIndex, match.index));
+      const rawText = text.substring(lastIndex, match.index);
+      parts.push(...renderPlainTextWithFormatting(rawText, `t-${lastIndex}`));
     }
     const token = match[0];
     if (token.startsWith("$$") && token.endsWith("$$")) {
@@ -224,7 +257,8 @@ export function renderInlineMathText(text: string): React.ReactNode[] {
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex));
+    const rawText = text.substring(lastIndex);
+    parts.push(...renderPlainTextWithFormatting(rawText, `t-${lastIndex}`));
   }
 
   return parts;

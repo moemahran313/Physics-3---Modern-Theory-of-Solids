@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DUAL_TRACK_TOPICS } from "../lib/curriculumData";
-import { LaTeXRenderer, MathView } from "./LaTeXRenderer";
+import { LaTeXRenderer, MathView, FormattedContent } from "./LaTeXRenderer";
 import { Binary, Search, Terminal, ChevronDown, ChevronUp, CheckCircle, FileText, Printer } from "lucide-react";
 
 export const DerivationsLibrary: React.FC<{
@@ -138,12 +138,14 @@ export const DerivationsLibrary: React.FC<{
                         <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto text-center">
                           <MathView math={step.math} displayMode={true} />
                         </div>
-                        <p className="text-slate-300 text-[11px] leading-relaxed">
-                          <strong>Physical & Algebraic Rationale:</strong> {step.explanation}
-                        </p>
+                        <div className="text-slate-300 text-[11px] leading-relaxed">
+                          <strong className="text-purple-200">Physical & Algebraic Rationale: </strong>
+                          <FormattedContent content={step.explanation} className="inline" />
+                        </div>
                         {step.boundaryOrLimit && (
-                          <div className="text-[10px] font-mono text-cyan-400 bg-slate-950/80 p-2 rounded border border-slate-800">
-                            <strong>Physical Boundary / Limit Check:</strong> {step.boundaryOrLimit}
+                          <div className="text-[10px] font-mono text-cyan-300 bg-slate-950/80 p-2 rounded border border-slate-800">
+                            <strong className="text-cyan-400">Physical Boundary / Limit Check: </strong>
+                            <FormattedContent content={step.boundaryOrLimit} className="inline" />
                           </div>
                         )}
                       </div>
