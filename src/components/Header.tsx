@@ -20,7 +20,9 @@ import {
   X, 
   ChevronRight,
   BookOpen,
-  Atom
+  Atom,
+  Calculator,
+  Code2
 } from "lucide-react";
 import { PWAInstallButton } from "./PWAInstallButton";
 
@@ -28,6 +30,7 @@ interface HeaderProps {
   currentTab: NavMode;
   onSelectTab: (tab: NavMode) => void;
   onOpenConstants: () => void;
+  onOpenCalculator?: () => void;
   collapsedSidebar: boolean;
   onToggleSidebar: () => void;
 }
@@ -36,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentTab,
   onSelectTab,
   onOpenConstants,
+  onOpenCalculator,
   onToggleSidebar,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -348,7 +352,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setIsMobileSearchActive(prev => !prev)}
             className={`lg:hidden p-2 sm:p-2.5 rounded-xl border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
               isMobileSearchActive
-                ? "bg-indigo-600 text-white border-indigo-500"
+                ? "bg-slate-800 text-white border-slate-700"
                 : "bg-slate-900 border-slate-800 text-slate-300 active:bg-slate-800"
             }`}
             title="Search RefLib"
@@ -360,10 +364,38 @@ export const Header: React.FC<HeaderProps> = ({
           {/* PWA Install Button */}
           <PWAInstallButton variant="header" />
 
+          {/* Prompt Directory Button */}
+          <button
+            onClick={() => onSelectTab("prompts")}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors min-h-[44px] active:scale-95 whitespace-nowrap ${
+              currentTab === "prompts"
+                ? "bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/20"
+                : "bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-cyan-300"
+            }`}
+            title="Open Engineering Prompt Directory"
+            aria-label="Open Engineering Prompt Directory"
+          >
+            <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="hidden sm:inline">Prompts</span>
+          </button>
+
+          {/* Scientific Calculator Modal Button */}
+          {onOpenCalculator && (
+            <button
+              onClick={onOpenCalculator}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-200 hover:text-cyan-300 transition-colors min-h-[44px] active:scale-95 shadow-sm"
+              title="Quantum Scientific Calculator"
+              aria-label="Quantum Scientific Calculator"
+            >
+              <Calculator className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span className="hidden xl:inline">Calculator</span>
+            </button>
+          )}
+
           {/* Constants Modal Button */}
           <button
             onClick={onOpenConstants}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 transition-colors min-h-[44px] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-200 hover:text-indigo-300 transition-colors min-h-[44px] active:scale-95"
             title="Physical Constants Reference"
             aria-label="Physical Constants Reference"
           >
@@ -374,11 +406,15 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Cramming Arena Quick Button */}
           <button
             onClick={() => onSelectTab("cramming-arena")}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-medium transition-colors min-h-[44px] active:scale-95 whitespace-nowrap"
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors min-h-[44px] active:scale-95 whitespace-nowrap ${
+              currentTab === "cramming-arena"
+                ? "bg-rose-600 text-white font-bold"
+                : "bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 hover:text-rose-300"
+            }`}
             title="Open Cramming Arena"
             aria-label="Open Cramming Arena"
           >
-            <Flame className="w-4 h-4 text-rose-400 animate-pulse shrink-0" />
+            <Flame className="w-4 h-4 text-rose-400 shrink-0" />
             <span className="hidden md:inline lg:hidden xl:inline">Cram Arena</span>
           </button>
 
@@ -387,7 +423,7 @@ export const Header: React.FC<HeaderProps> = ({
             href="https://discord.gg/p6hkRbzFTn"
             target="_blank"
             rel="noreferrer"
-            className="hidden xl:flex p-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
+            className="hidden xl:flex p-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
             title="Join Study Discord"
           >
             <ExternalLink className="w-4 h-4" />

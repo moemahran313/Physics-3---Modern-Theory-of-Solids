@@ -5,6 +5,7 @@ export type NavMode =
   | "sheet-2"
   | "sheet-3"
   | "sheet-4"
+  | "chapter-exam"
   | "cramming-arena"
   | "flashcards"
   | "videos"
@@ -14,6 +15,7 @@ export type NavMode =
   | "sandboxes"
   | "terminal"
   | "official-docs"
+  | "prompts"
   | "curriculum"
   | "derivations"
   | "exam-trainer"
@@ -231,4 +233,39 @@ export interface ChatMessage {
   timestamp: string;
   content: string;
   commandTrigger?: string;
+}
+
+export interface ChapterExamQuestion {
+  id: string;
+  chapterId: ChapterId;
+  sheetNumber: number;
+  questionNumber: number | string;
+  officialSource: string; // e.g. "Sheet 1: Problem 4", "Assignment 2: Problem 10"
+  title: string;
+  topic: string;
+  difficulty: "introductory" | "standard" | "exam-hall";
+  points: number;
+  prompt: string;
+  given: Array<{ symbol: string; value: string; description?: string }>;
+  targetUnknown: string;
+  expectedValue: number;
+  units: string;
+  tolerance: number; // e.g. 0.025 for ±2.5%
+  alternateUnits?: Array<{ unit: string; multiplier: number }>;
+  governingFormula: string;
+  pitfallWarning: string;
+  tips: string[];
+  progressiveHints: [string, string, string]; // [Tier 1: Formula, Tier 2: Intermediates, Tier 3: Complete Setup]
+  solutionSteps: Array<{ step: string; latex: string; explanation?: string }>;
+  mcqOptions?: Array<{ id: string; text: string; correct?: boolean }>;
+}
+
+export interface ChapterExamEvaluation {
+  status: "correct" | "near-miss" | "incorrect";
+  scorePercent: number; // 100, 85, 0
+  feedback: string;
+  inputParsed: number | null;
+  expectedValue: number;
+  differencePercent: number | null;
+  diagnosticTip?: string;
 }

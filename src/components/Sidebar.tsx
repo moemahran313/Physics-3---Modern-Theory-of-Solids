@@ -15,7 +15,9 @@ import {
   Atom,
   GraduationCap,
   Activity,
-  X
+  X,
+  Code2,
+  ShieldCheck
 } from "lucide-react";
 import { PWAInstallButton } from "./PWAInstallButton";
 
@@ -117,9 +119,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Category: ALL SHEETS */}
           <div>
             {(!collapsed || isMobileOpen) && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono flex items-center justify-between">
-                <span>All Sheets</span>
-                <span className="text-indigo-400 text-[10px] font-normal">Ch. 1–4</span>
+              <div className="px-3 mb-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase font-mono flex items-center justify-between">
+                <span>Tutorial Sheets</span>
+                <span className="text-slate-400 text-[10px] font-normal">Ch. 1–4</span>
               </div>
             )}
             <div className="space-y-1">
@@ -129,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<FileText className="w-4 h-4 text-cyan-400" />}
                 label="Sheet 1: Quantum & Thermal"
                 shortLabel="S1"
-                badge="Blackbody & Photo"
+                subtitle="Blackbody & Photoelectric"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -138,16 +140,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<FileText className="w-4 h-4 text-sky-400" />}
                 label="Sheet 2: Wave Mechanics"
                 shortLabel="S2"
-                badge="Schrödinger & Wells"
+                subtitle="Schrödinger & Wells"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
                 active={currentTab === "sheet-3"}
                 onClick={() => handleItemClick("sheet-3")}
-                icon={<FileText className="w-4 h-4 text-purple-400" />}
+                icon={<FileText className="w-4 h-4 text-indigo-400" />}
                 label="Sheet 3: Atomic Physics"
                 shortLabel="S3"
-                badge="Bohr & X-Rays"
+                subtitle="Bohr & X-Rays"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -156,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<FileText className="w-4 h-4 text-amber-400" />}
                 label="Sheet 4: Special Relativity"
                 shortLabel="S4"
-                badge="Lorentz & E=mc²"
+                subtitle="Lorentz & E=mc²"
                 collapsed={collapsed && !isMobileOpen}
               />
             </div>
@@ -165,20 +167,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Category: ARENA & MASTERY */}
           <div>
             {(!collapsed || isMobileOpen) && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono flex items-center justify-between">
+              <div className="px-3 mb-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase font-mono flex items-center justify-between">
                 <span>Exam & Study Hub</span>
-                <span className="text-rose-400 text-[10px]">Cramming</span>
+                <span className="text-rose-400/80 text-[10px]">10 Mocks</span>
               </div>
             )}
             <div className="space-y-1">
               <SidebarItem
+                active={currentTab === "chapter-exam"}
+                onClick={() => handleItemClick("chapter-exam")}
+                icon={<ShieldCheck className="w-4 h-4 text-cyan-400" />}
+                label="Chapter Examination"
+                shortLabel="Exam"
+                subtitle="Ch. 1–4 Test Engine"
+                collapsed={collapsed && !isMobileOpen}
+              />
+              <SidebarItem
                 active={currentTab === "cramming-arena"}
                 onClick={() => handleItemClick("cramming-arena")}
-                icon={<Flame className="w-4 h-4 text-rose-500 animate-pulse" />}
+                icon={<Flame className="w-4 h-4 text-rose-400" />}
                 label="Cramming Arena"
                 shortLabel="Cram"
-                badge="10 Mock Exams"
-                badgeColor="bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                subtitle="10 Mock Exams"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -187,17 +197,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<Layers className="w-4 h-4 text-indigo-400" />}
                 label="Flashcards Arena"
                 shortLabel="Flash"
-                badge="Spaced Repetition"
+                subtitle="Spaced Repetition"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
                 active={currentTab === "videos"}
                 onClick={() => handleItemClick("videos")}
-                icon={<Tv className="w-4 h-4 text-red-500" />}
+                icon={<Tv className="w-4 h-4 text-red-400" />}
                 label="Video Dashboard"
                 shortLabel="Videos"
-                badge="10 Lectures"
-                badgeColor="bg-red-500/20 text-red-300 border border-red-500/30"
+                subtitle="10 Lectures"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -206,13 +215,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<FileSpreadsheet className="w-4 h-4 text-emerald-400" />}
                 label="Equation Sheet"
                 shortLabel="Eqs"
-                badge="Master Cheatsheet"
+                subtitle="Master Cheatsheet"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
                 active={currentTab === "mnemonics"}
                 onClick={() => handleItemClick("mnemonics")}
-                icon={<BrainCircuit className="w-4 h-4 text-yellow-400" />}
+                icon={<BrainCircuit className="w-4 h-4 text-amber-400" />}
                 label="Cramming Mnemonics"
                 shortLabel="Mnem"
                 collapsed={collapsed && !isMobileOpen}
@@ -223,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Category: LABS & SIMULATORS */}
           <div>
             {(!collapsed || isMobileOpen) && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono">
+              <div className="px-3 mb-1.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase font-mono">
                 <span>Interactive & Tools</span>
               </div>
             )}
@@ -234,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<Activity className="w-4 h-4 text-cyan-400" />}
                 label="Physics Visualizer"
                 shortLabel="Vis"
-                badge="/visualize"
+                subtitle="Wave & Spectrum"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -243,7 +252,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<Sliders className="w-4 h-4 text-amber-400" />}
                 label="Visual Sandboxes"
                 shortLabel="Sims"
-                badge="7 Physics Sims"
+                subtitle="7 Simulations"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -252,7 +261,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<GraduationCap className="w-4 h-4 text-teal-400" />}
                 label="Past Official Papers"
                 shortLabel="Docs"
-                badge="2020–2021"
+                subtitle="2020–2021"
+                collapsed={collapsed && !isMobileOpen}
+              />
+              <SidebarItem
+                active={currentTab === "prompts"}
+                onClick={() => handleItemClick("prompts")}
+                icon={<Code2 className="w-4 h-4 text-cyan-400" />}
+                label="Prompt Directory"
+                shortLabel="Prompts"
+                subtitle="System Prompts"
                 collapsed={collapsed && !isMobileOpen}
               />
               <SidebarItem
@@ -268,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 icon={<Terminal className="w-4 h-4 text-emerald-400" />}
                 label="AI Socratic Terminal"
                 shortLabel="AI"
-                badge="Helper"
+                subtitle="Problem Solver"
                 collapsed={collapsed && !isMobileOpen}
               />
             </div>
@@ -286,29 +304,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
               href="https://discord.gg/p6hkRbzFTn"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-300 text-xs transition-colors min-h-[44px]"
+              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white text-xs transition-colors min-h-[44px]"
             >
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="font-semibold">Join Study Discord</span>
-              </div>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="font-medium">Join Study Discord</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
           )}
 
           {(!collapsed || isMobileOpen) ? (
-            <div className="px-2 pt-1 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="px-2 pt-1 flex items-center justify-between text-[11px] text-slate-400 font-mono">
               <div>
-                <span className="text-slate-400 block font-medium">RefLib by Mahran</span>
-                <span className="text-indigo-400 font-mono text-[10px]">@mhdmahran</span>
+                <span className="text-slate-300 block font-sans font-medium text-xs">RefLib by Mahran</span>
+                <span className="text-slate-400 text-[10px]">ELCn114 Modern Academy</span>
               </div>
-              <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-emerald-400">
+              <span className="text-[11px] text-slate-400 font-mono">
                 v2.5
               </span>
             </div>
           ) : (
             <div className="flex justify-center">
-              <span className="text-[10px] font-mono text-indigo-400">v2.5</span>
+              <span className="text-[10px] font-mono text-slate-400">v2.5</span>
             </div>
           )}
         </div>
@@ -323,8 +338,7 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
   shortLabel: string;
-  badge?: string;
-  badgeColor?: string;
+  subtitle?: string;
   collapsed: boolean;
 }
 
@@ -334,8 +348,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   icon,
   label,
   shortLabel,
-  badge,
-  badgeColor,
+  subtitle,
   collapsed,
 }) => {
   return (
@@ -344,21 +357,17 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       title={label}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all min-h-[44px] ${
         active
-          ? "bg-indigo-600/20 text-white border border-indigo-500/40 shadow-sm"
-          : "text-slate-400 hover:text-slate-200 hover:bg-slate-900 active:bg-slate-850"
+          ? "bg-slate-900 text-white border border-slate-700/80 shadow-sm"
+          : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 active:bg-slate-850"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
       <span className="shrink-0">{icon}</span>
       {!collapsed && (
-        <div className="flex-1 flex items-center justify-between overflow-hidden">
-          <span className="truncate text-left">{label}</span>
-          {badge && (
-            <span
-              className={`text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 ml-1.5 ${
-                badgeColor || "bg-slate-800 text-slate-300 border border-slate-700/60"
-              }`}
-            >
-              {badge}
+        <div className="flex-1 flex items-baseline justify-between overflow-hidden">
+          <span className="truncate text-left font-medium">{label}</span>
+          {subtitle && (
+            <span className="text-[10px] text-slate-400 font-mono shrink-0 ml-2 hidden xl:inline">
+              {subtitle}
             </span>
           )}
         </div>

@@ -54,13 +54,32 @@ export const LaTeXRenderer: React.FC<LaTeXRendererProps> = ({
     }
   }, [math, isBlock]);
 
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!math) return;
+    navigator.clipboard.writeText(math);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (isBlock) {
     return (
-      <div
-        className={`latex-display-container my-2 sm:my-3 py-1.5 px-2 overflow-x-auto text-slate-100 font-mono tracking-wide leading-relaxed scrollbar-none select-text ${className}`}
-        aria-label={ariaLabel || math}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <div className={`latex-display-container relative group my-2 sm:my-3 py-2 px-3 rounded-xl bg-slate-950/60 border border-slate-800/60 overflow-x-auto text-slate-100 font-mono tracking-wide leading-relaxed scrollbar-none select-text ${className}`}>
+        <button
+          onClick={handleCopy}
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity absolute right-2 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] text-slate-400 hover:text-cyan-300 font-mono flex items-center gap-1 shadow"
+          title="Copy LaTeX source"
+          aria-label="Copy LaTeX"
+        >
+          {copied ? "✓ Copied" : "Copy TeX"}
+        </button>
+        <div
+          aria-label={ariaLabel || math}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
     );
   }
 
@@ -266,3 +285,110 @@ export function renderInlineMathText(text: string): React.ReactNode[] {
 
 // Backward-compatible alias for seamless integration
 export const MathView = LaTeXRenderer;
+
+/**
+ * Interactive LaTeX Playground / Scratchpad with instant symbol shortcuts
+ */
+export const LaTeXPlayground: React.FC<{
+  initialMath?: string;
+  placeholder?: string;
+  className?: string;
+  onInsertIntoParent?: (snippet: string) => void;
+}> = ({
+  initialMath = "\\lambda_{\\max} T = 2.898 \\times 10^{-3} \\text{ m}\\cdot\\text{K}",
+  placeholder = "Enter LaTeX equation or notes here...",
+  className = "",
+  onInsertIntoParent,
+}) => {
+  const [latexInput, setLatexInput] = React.useState(initialMath);
+  const [copied, setCopied] = React.useState(false);
+
+  const physicsShortcuts = [
+    { label: "ħ", latex: "\\hbar " },
+    { label: "λ", latex: "\\lambda " },
+    { label: "ν", latex: "\\nu " },
+    { label: "ψ", latex: "\\psi " },
+    { label: "σ", latex: "\\sigma " },
+    { label: "π", latex: "\\pi " },
+    { label: "θ", latex: "\\theta " },
+    { label: "Δλ", latex: "\\Delta\\lambda " },
+    { label: "√x", latex: "\\sqrt{x} " },
+    { label: "a/b", latex: "\\frac{a}{b} " },
+    { label: "×10ⁿ", latex: "\\times 10^{n} " },
+    { label: "∫", latex: "\\int_{0}^{\\infty} " },
+  ];
+
+  const handleInsert = (symbol: string) => {
+    setLatexInput((prev) => prev + symbol);
+    if (onInsertIntoParent) {
+      onInsertIntoParent(symbol);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!latexInput) return;
+    navigator.clipboard.writeText(latexInput);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={`p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 ${className}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+          <span className="text-xs font-mono font-semibold text-slate-200">
+            Interactive LaTeX Scratchpad
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLatexInput("")}
+            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            Clear
+          </button>
+          <button
+            onClick={handleCopy}
+            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[11px] font-medium text-white transition-colors"
+          >
+            {copied ? "✓ Copied" : "Copy TeX"}
+          </button>
+        </div>
+      </div>
+
+      {/* Physics Shortcuts Toolbar */}
+      <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-slate-950/80 border border-slate-800/80">
+        <span className="text-[10px] text-slate-500 font-mono pr-1">Shortcuts:</span>
+        {physicsShortcuts.map((item, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handleInsert(item.latex)}
+            className="px-2 py-1 rounded-lg bg-slate-800/90 hover:bg-indigo-900/60 hover:text-indigo-200 border border-slate-700/60 text-xs font-mono text-slate-300 transition-colors"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Input textarea */}
+      <textarea
+        value={latexInput}
+        onChange={(e) => setLatexInput(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-indigo-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/60 resize-y"
+      />
+
+      {/* Live Preview */}
+      <div className="p-3 rounded-xl bg-slate-950/90 border border-slate-800/90 min-h-[50px] flex items-center justify-center">
+        {latexInput.trim() ? (
+          <LaTeXRenderer math={latexInput} block={true} />
+        ) : (
+          <span className="text-xs text-slate-600 italic">Rendered equation preview will appear here...</span>
+        )}
+      </div>
+    </div>
+  );
+};

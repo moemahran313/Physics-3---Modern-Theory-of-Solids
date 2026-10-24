@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -322,6 +322,244 @@ async function generatePhysicsContentWithFallback(
     }
   });
 
+  // AI Step-by-Step Derivation Logic & Socratic Hint Engine for ChapterExamArena
+  const handleAnalyzeDerivationSteps = async (req: express.Request, res: express.Response) => {
+    const {
+      problemTitle,
+      problemPrompt,
+      governingFormula,
+      officialSteps = [],
+      expectedValue,
+      units,
+      studentSteps = [],
+      studentAnswerLatex = "",
+    } = req.body;
+
+    const cleanSteps: string[] = Array.isArray(studentSteps)
+      ? studentSteps.map((s) => String(s || "").trim()).filter(Boolean)
+      : [];
+    const cleanFinal = String(studentAnswerLatex || "").trim();
+
+    if (cleanSteps.length === 0 && !cleanFinal) {
+      return res.status(400).json({ error: "Please write at least one step or formula." });
+    }
+
+    const ai = getGeminiClient();
+
+    if (ai) {
+      const models = ["gemini-3.8-flash", "gemini-3.1-flash-lite"];
+      const promptText = `You are a Socratic university physics tutor evaluating a student's mathematical derivation and step-by-step work on a mobile device.
+CRITICAL EVALUATION RULES:
+1. Evaluate LOGICAL FLOW and MATHEMATICAL EQUIVALENCE, NEVER rigid string equality! If the student writes an algebraically equivalent rearrangement (e.g., $T = \\frac{b}{\\lambda_{\\max}}$ instead of $\\lambda_{\\max} T = b$, or uses $\\nu$ instead of $f$, or writes $h\\nu - \\phi = eV_0$), mark that step as VALID and logically sound.
+2. Calculate and verify how each student step transitions to the next (dimensional consistency, unit conversions like nm -> m or °C -> K, and physical constant substitutions).
+3. Award up to 85% credit for logically valid derivation steps and formulas even if the final numerical answer is not computed yet.
+4. For any incorrect or incomplete step, provide a REAL-TIME SOCRATIC HINT: ask a short, thought-provoking question or give a physical clue that guides the student to spot and fix the issue themselves without just dumping raw jargon.
+5. Format all mathematical expressions and numbers in clean LaTeX wrapped in $...$ (e.g., $9.41 \\times 10^{-6}\\text{ m}$, $\\hbar$, $\\lambda$).
+
+Problem Title: ${problemTitle}
+Problem Statement: ${problemPrompt}
+Governing Formula: ${governingFormula}
+Official Reference Derivation Steps:
+${officialSteps.map((s: { step?: string; latex?: string; explanation?: string }, i: number) => `Step ${i + 1}: ${s.step || ""} | Math: ${s.latex || ""} | Note: ${s.explanation || ""}`).join("\n")}
+Official Final Value: ${expectedValue} ${units}
+
+Student's Derivation Steps (in LaTeX):
+${cleanSteps.length > 0 ? cleanSteps.map((s, i) => `Student Step ${i + 1}: ${s}`).join("\n") : "(No separate steps listed)"}
+Student's Final/Main Expression (in LaTeX):
+${cleanFinal || "(Not entered yet)"}`;
+
+      for (const model of models) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: promptText,
+            config: {
+              temperature: 0.2,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  overallStatus: {
+                    type: Type.STRING,
+                    description: "One of: 'correct', 'good-steps', 'partial-steps', 'needs-fix'",
+                  },
+                  logicalFlowValid: {
+                    type: Type.BOOLEAN,
+                    description: "True if the student's steps follow a valid physical and algebraic progression.",
+                  },
+                  scorePercent: {
+                    type: Type.NUMBER,
+                    description: "Score from 0 to 100 based primarily on logical derivation flow and step validity.",
+                  },
+                  headline: {
+                    type: Type.STRING,
+                    description: "Short, encouraging 1-line summary of their derivation flow in plain English.",
+                  },
+                  easyExplanation: {
+                    type: Type.STRING,
+                    description: "Friendly, easy-to-read analysis of their derivation flow and what they did right, using $...$ for LaTeX math.",
+                  },
+                  socraticHint: {
+                    type: Type.STRING,
+                    description: "A Socratic guiding question or conceptual nudge for the student's next or incorrect step (using $...$ for math).",
+                  },
+                  stepChecks: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        stepLabel: { type: Type.STRING },
+                        studentLatex: { type: Type.STRING },
+                        isCorrect: { type: Type.BOOLEAN },
+                        logicalTransitionNote: {
+                          type: Type.STRING,
+                          description: "Brief note on how this step connects logically or dimensionally.",
+                        },
+                        easyComment: {
+                          type: Type.STRING,
+                          description: "Simple 1-sentence feedback on this specific step with $...$ LaTeX.",
+                        },
+                        socraticPrompt: {
+                          type: Type.STRING,
+                          description: "If this step has an error, a Socratic question guiding the student to fix it; otherwise empty string.",
+                        },
+                        correctedLatex: {
+                          type: Type.STRING,
+                          description: "Clean LaTeX for this step if it needed a fix, or empty string if already good.",
+                        },
+                      },
+                      required: ["stepLabel", "studentLatex", "isCorrect", "easyComment"],
+                    },
+                  },
+                  nextHint: {
+                    type: Type.STRING,
+                    description: "A simple, helpful Socratic hint for their very next step (using $...$ for math).",
+                  },
+                },
+                required: [
+                  "overallStatus",
+                  "logicalFlowValid",
+                  "scorePercent",
+                  "headline",
+                  "easyExplanation",
+                  "socraticHint",
+                  "stepChecks",
+                  "nextHint",
+                ],
+              },
+            },
+          });
+
+          if (response.text) {
+            const parsed = JSON.parse(response.text);
+            return res.json({
+              source: model,
+              ...parsed,
+            });
+          }
+        } catch (err) {
+          console.warn(`[Step Analyzer] Model ${model} failed:`, (err as Error)?.message);
+        }
+      }
+    }
+
+    // Intelligent step-aware fallback when offline or rate-limited
+    const fallbackResult = buildSmartStepAnalysisFallback({
+      governingFormula,
+      officialSteps,
+      expectedValue,
+      units,
+      cleanSteps,
+      cleanFinal,
+    });
+    return res.json({
+      source: "smart_step_engine",
+      ...fallbackResult,
+    });
+  };
+
+  app.post("/api/ai/analyze-steps", handleAnalyzeDerivationSteps);
+  app.post("/api/ai/verify-derivation", handleAnalyzeDerivationSteps);
+
+  app.post("/api/ai/hint", async (req, res) => {
+    const {
+      problemTitle,
+      problemPrompt,
+      governingFormula,
+      officialSteps = [],
+      expectedValue,
+      units,
+      studentSteps = [],
+      studentAnswerLatex = "",
+      mode = "hint", // "hint" | "explain-easy"
+    } = req.body;
+
+    const ai = getGeminiClient();
+    if (ai) {
+      const models = ["gemini-3.8-flash", "gemini-3.1-flash-lite"];
+      const promptText =
+        mode === "explain-easy"
+          ? `Explain how to solve this physics problem in super simple, beginner-friendly steps for a student reading on a mobile phone.
+Do NOT just dump formulas—explain *why* we do each step in 1-2 short, plain English sentences, and write all numbers and equations in clean LaTeX wrapped in $...$ or $$...$$.
+Problem: ${problemTitle} — ${problemPrompt}
+Formula: ${governingFormula}
+Steps: ${officialSteps.map((s: { step?: string; latex?: string; explanation?: string }, i: number) => `${i + 1}. ${s.step}: ${s.latex} (${s.explanation || ""})`).join(" | ")}
+Final Answer: ${expectedValue} ${units}`
+          : `Give the student ONE short, super easy hint for their next step on this physics problem, based on what they have written so far.
+Do NOT give away the final number directly—guide them on what formula to pick or what number/unit conversion to plug in next. Use $...$ for any LaTeX math.
+Problem: ${problemTitle} — ${problemPrompt}
+Formula: ${governingFormula}
+Official Steps: ${officialSteps.map((s: { step?: string; latex?: string }, i: number) => `${i + 1}. ${s.step}: ${s.latex}`).join(" | ")}
+Student's current work: ${[...(studentSteps || []), studentAnswerLatex].filter(Boolean).join(" ; ") || "Nothing written yet — needs a starting hint!"}`;
+
+      for (const model of models) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: promptText,
+            config: { temperature: 0.25 },
+          });
+          if (response.text?.trim()) {
+            return res.json({
+              source: model,
+              text: response.text.trim(),
+            });
+          }
+        } catch (err) {
+          console.warn(`[Hint Engine] Model ${model} failed:`, (err as Error)?.message);
+        }
+      }
+    }
+
+    // Fallback easy hint or easy explanation
+    if (mode === "explain-easy") {
+      const easyLines = officialSteps.map(
+        (s: { step?: string; latex?: string; explanation?: string }, idx: number) =>
+          `**Step ${idx + 1}: ${s.step || "Calculation Step"}**\n${
+            s.explanation ? `${s.explanation}\n` : "Plug the values into our relation:\n"
+          }$$${s.latex}$$`
+      );
+      return res.json({
+        source: "smart_step_engine",
+        text: `Here is the easy step-by-step way to think about this problem:\n\n**Start with the main formula:**\n$$${governingFormula}$$\n\n${easyLines.join("\n\n")}`,
+      });
+    } else {
+      const nextStepIdx = Math.min(
+        Array.isArray(studentSteps) ? studentSteps.filter(Boolean).length : 0,
+        Math.max(0, officialSteps.length - 1)
+      );
+      const targetStep = officialSteps[nextStepIdx] || officialSteps[0];
+      return res.json({
+        source: "smart_step_engine",
+        text: targetStep
+          ? `**Hint for Step ${nextStepIdx + 1} (${targetStep.step}):** ${
+              targetStep.explanation || "Use the governing relation and check your units carefully."
+            }\n$$${targetStep.latex}$$`
+          : `Start with the main formula: $$${governingFormula}$$ and make sure all given numbers are converted to standard SI units before dividing or multiplying.`,
+      });
+    }
+  });
+
   // Setup Vite middleware in dev or static files in production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -340,6 +578,204 @@ async function generatePhysicsContentWithFallback(
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Physics 3 Educational Core Engine running at http://0.0.0.0:${PORT}`);
   });
+}
+
+function parseLatexNumericServer(raw: string): number | null {
+  if (!raw || typeof raw !== "string") return null;
+  let s = raw.trim();
+  // Remove \text{...} and units
+  s = s.replace(/\\text\{[^}]*\}/g, "");
+  s = s.replace(/\$/g, "");
+  // If there is an '=' sign, evaluate the right-hand side
+  if (s.includes("=")) {
+    const parts = s.split("=");
+    s = parts[parts.length - 1].trim();
+  }
+  // Convert \frac{a}{b} -> ((a)/(b))
+  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "(($1)/($2))");
+  // Convert \times 10^{n} or \cdot 10^{n} -> *10^(n)
+  s = s.replace(/\\(?:times|cdot)\s*10\^\{([+-]?\d+(?:\.\d+)?)\}/g, "e$1");
+  s = s.replace(/\\(?:times|cdot)\s*10\^([+-]?\d+)/g, "e$1");
+  s = s.replace(/(?:[\*x×])\s*10\^\{?([+-]?\d+)\}?/gi, "e$1");
+  // Strip remaining common unit suffixes
+  s = s.replace(
+    /\s*(?:watts?|joules?|ev|kev|mev|nm|pm|mm|cm|m\/s|hz|volts?|kelvin|m|s|w|j|k|v|a|å)\s*$/i,
+    ""
+  ).trim();
+  s = s.replace(/[{}]/g, "");
+
+  // Direct float / scientific
+  const direct = Number(s);
+  if (!Number.isNaN(direct) && Number.isFinite(direct) && s !== "") {
+    return direct;
+  }
+
+  // Simple fraction a/b
+  const fracMatch = s.match(/^\(?([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\)?\s*\/\s*\(?([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\)?$/i);
+  if (fracMatch) {
+    const num = parseFloat(fracMatch[1]);
+    const den = parseFloat(fracMatch[2]);
+    if (!Number.isNaN(num) && !Number.isNaN(den) && den !== 0) {
+      return num / den;
+    }
+  }
+  return null;
+}
+
+function buildSmartStepAnalysisFallback(params: {
+  governingFormula: string;
+  officialSteps: Array<{ step?: string; latex?: string; explanation?: string }>;
+  expectedValue: number | string;
+  units: string;
+  cleanSteps: string[];
+  cleanFinal: string;
+}) {
+  const { governingFormula, officialSteps, expectedValue, units, cleanSteps, cleanFinal } = params;
+  const expectedNum =
+    typeof expectedValue === "number" ? expectedValue : parseLatexNumericServer(String(expectedValue));
+
+  const allEntries = [...cleanSteps];
+  if (cleanFinal && !allEntries.includes(cleanFinal)) {
+    allEntries.push(cleanFinal);
+  }
+
+  const normalizeMathTokens = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/\\text\{[^}]*\}/g, "")
+      .replace(/\\left|\\right/g, "");
+
+  const normGov = normalizeMathTokens(governingFormula || "");
+
+  let matchedStepsCount = 0;
+  const stepChecks = allEntries.map((entry, idx) => {
+    const normEntry = normalizeMathTokens(entry);
+    const entryNum = parseLatexNumericServer(entry);
+
+    // Check if entry matches final expected value
+    if (expectedNum !== null && entryNum !== null) {
+      const relDiff =
+        expectedNum !== 0 ? Math.abs(entryNum - expectedNum) / Math.abs(expectedNum) : Math.abs(entryNum);
+      if (relDiff <= 0.05) {
+        matchedStepsCount++;
+        return {
+          stepLabel: `Step ${idx + 1}`,
+          studentLatex: entry,
+          isCorrect: true,
+          logicalTransitionNote: "Dimensionally & numerically consistent with official derivation.",
+          easyComment: `Spot on! Your value matches the target ($${expectedValue}\\text{ ${units}}$) within rounding tolerance.`,
+          socraticPrompt: "",
+          correctedLatex: "",
+        };
+      }
+    }
+
+    // Check if entry shares key symbols or numbers with governing formula or official steps
+    const matchingOfficial = officialSteps.find((os) => {
+      const normOs = normalizeMathTokens(os.latex || "");
+      return (
+        normOs.includes(normEntry) ||
+        normEntry.includes(normOs.slice(0, Math.min(8, normOs.length))) ||
+        (entryNum !== null && os.latex && os.latex.includes(String(entryNum).slice(0, 4)))
+      );
+    });
+
+    const isFormulaMatch =
+      normGov.length > 0 &&
+      (normGov.includes(normEntry) ||
+        normEntry.includes(normGov.split("=")[0] || "___") ||
+        /\\frac|\\times|\\lambda|\\hbar|\\nu|\\psi|\\sigma|\\Delta|\\sqrt|hf|mc\^2|E_n/.test(entry));
+
+    if (matchingOfficial || isFormulaMatch) {
+      matchedStepsCount++;
+      return {
+        stepLabel: `Step ${idx + 1}`,
+        studentLatex: entry,
+        isCorrect: true,
+        logicalTransitionNote: matchingOfficial
+          ? `Logically equivalent to ${matchingOfficial.step}.`
+          : "Valid governing physics relation.",
+        easyComment: matchingOfficial
+          ? `Good step! Matches "${matchingOfficial.step}".`
+          : `Good formula setup! You're on the right track.`,
+        socraticPrompt: "",
+        correctedLatex: "",
+      };
+    }
+
+    const refStep = officialSteps[Math.min(idx, Math.max(0, officialSteps.length - 1))];
+    return {
+      stepLabel: `Step ${idx + 1}`,
+      studentLatex: entry,
+      isCorrect: false,
+      logicalTransitionNote: "Check algebraic isolation and SI unit conversions.",
+      easyComment: refStep
+        ? `Check this step against ${refStep.step}: make sure your unit conversions and powers of $10$ match.`
+        : `Check your substitution into $${governingFormula}$.`,
+      socraticPrompt: refStep
+        ? `Socratic Question: In ${refStep.step}, how do the given units convert into standard SI before substituting into $${governingFormula}$?`
+        : `Socratic Question: Which variable in $${governingFormula}$ are we isolating, and are all inputs in SI units?`,
+      correctedLatex: refStep?.latex || governingFormula,
+    };
+  });
+
+  const finalParsed = parseLatexNumericServer(cleanFinal || cleanSteps[cleanSteps.length - 1] || "");
+  const isFinalCorrect =
+    expectedNum !== null &&
+    finalParsed !== null &&
+    (expectedNum !== 0
+      ? Math.abs(finalParsed - expectedNum) / Math.abs(expectedNum) <= 0.05
+      : Math.abs(finalParsed) <= 0.05);
+
+  if (isFinalCorrect) {
+    return {
+      overallStatus: "correct",
+      logicalFlowValid: true,
+      scorePercent: 100,
+      headline: "Great job! Your derivation flow and final LaTeX answer are right!",
+      easyExplanation: `You set up the derivation cleanly and arrived at $${expectedValue}\\text{ ${units}}$. Every step follows logically!`,
+      socraticHint: "Your logical flow is complete! Can you see how the result would scale if the input parameter were doubled?",
+      stepChecks,
+      nextHint: `You've completed this problem! Try the next question when you're ready.`,
+    };
+  }
+
+  if (matchedStepsCount > 0) {
+    const partialScore = Math.min(85, Math.max(55, Math.round((matchedStepsCount / Math.max(1, officialSteps.length)) * 85)));
+    const nextIdx = Math.min(matchedStepsCount, Math.max(0, officialSteps.length - 1));
+    const nextOfficial = officialSteps[nextIdx];
+    return {
+      overallStatus: "good-steps",
+      logicalFlowValid: true,
+      scorePercent: partialScore,
+      headline: `Valid derivation flow! You earned ${partialScore}% step credit so far.`,
+      easyExplanation: `Your algebraic steps follow a logical progression! Because we evaluate logical flow (not just the final number), you already earned **${partialScore}% credit**. Use the Socratic hint below to complete the next transition.`,
+      socraticHint: nextOfficial
+        ? `What happens when you substitute your converted values into **${nextOfficial.step}** ($${nextOfficial.latex}$)?`
+        : `Now that your equation is set up, what value do you get in $[\\text{${units}}]$ when you evaluate the powers of $10$?`,
+      stepChecks,
+      nextHint: nextOfficial
+        ? `Next step (${nextOfficial.step}): try writing $${nextOfficial.latex}$ to reach $${expectedValue}\\text{ ${units}}$.`
+        : `Finish evaluating your expression to get $${expectedValue}\\text{ ${units}}$.`,
+    };
+  }
+
+  const firstStep = officialSteps[0];
+  return {
+    overallStatus: "needs-fix",
+    logicalFlowValid: false,
+    scorePercent: 25,
+    headline: "Let's check the logical starting point of your derivation!",
+    easyExplanation: `Instead of worrying about the final number, let's establish **Step 1** using the governing physical law $${governingFormula}$.`,
+    socraticHint: firstStep
+      ? `Think about the physical quantities given in the prompt: how does $${governingFormula}$ connect them in **${firstStep.step}**?`
+      : `Which fundamental relation (${governingFormula}) links the given parameters to the target unknown?`,
+    stepChecks,
+    nextHint: firstStep
+      ? `Start with **${firstStep.step}**: $${firstStep.latex}$ (${firstStep.explanation || "plug in the given values in SI units"}).`
+      : `Start with the formula: $${governingFormula}$`,
+  };
 }
 
 function generateCurriculumFallback(prompt: string, commandMode?: string): string {

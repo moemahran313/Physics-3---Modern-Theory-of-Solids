@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { NavMode } from "./types";
+import { NavMode, ChapterId } from "./types";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { SheetQuickSwitcher } from "./components/SheetQuickSwitcher";
 import { SheetsMasterclassView } from "./components/SheetsMasterclassView";
+import { ChapterExamArena } from "./components/ChapterExamArena";
 import { CrammingArena } from "./components/CrammingArena";
 import { VideoTheater } from "./components/VideoTheater";
 import { GlobalEquationsView } from "./components/GlobalEquationsView";
@@ -20,6 +21,8 @@ import { FlashcardsDeck } from "./components/FlashcardsDeck";
 import { OverviewArchitecture } from "./components/OverviewArchitecture";
 import { ConstantsModal } from "./components/ConstantsModal";
 import { OfficialDocumentsViewer } from "./components/OfficialDocumentsViewer";
+import { PromptDirectory } from "./components/PromptDirectory";
+import { ScientificCalculator } from "./components/ScientificCalculator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { useSwipeGesture } from "./hooks/useSwipeGesture";
 import { 
@@ -39,9 +42,11 @@ const SHEET_ORDER: { id: NavMode; title: string; num: string }[] = [
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavMode>("sheet-1");
   const [isConstantsOpen, setIsConstantsOpen] = useState<boolean>(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false);
   const [activeCommand, setActiveCommand] = useState<string>("");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [examChapterId, setExamChapterId] = useState<ChapterId>("ch1");
   const [swipeToast, setSwipeToast] = useState<{ text: string; direction: "next" | "prev" } | null>(null);
 
   const handleExecuteTrigger = (command: string) => {
@@ -114,6 +119,7 @@ export function App() {
             currentTab={currentTab}
             onSelectTab={setCurrentTab}
             onOpenConstants={() => setIsConstantsOpen(true)}
+            onOpenCalculator={() => setIsCalculatorOpen(prev => !prev)}
             collapsedSidebar={isSidebarCollapsed}
             onToggleSidebar={() => {
               // On mobile, toggle mobile drawer. On desktop, collapse sidebar.
@@ -152,6 +158,10 @@ export function App() {
                 sheet={SHEET_1_MASTERCLASS}
                 onOpenConstants={() => setIsConstantsOpen(true)}
                 onOpenExamTrainer={() => setCurrentTab("cramming-arena")}
+                onOpenChapterExam={(chId) => {
+                  setExamChapterId(chId);
+                  setCurrentTab("chapter-exam");
+                }}
               />
             )}
 
@@ -161,6 +171,10 @@ export function App() {
                 sheet={SHEET_2_MASTERCLASS}
                 onOpenConstants={() => setIsConstantsOpen(true)}
                 onOpenExamTrainer={() => setCurrentTab("cramming-arena")}
+                onOpenChapterExam={(chId) => {
+                  setExamChapterId(chId);
+                  setCurrentTab("chapter-exam");
+                }}
               />
             )}
 
@@ -170,6 +184,10 @@ export function App() {
                 sheet={SHEET_3_MASTERCLASS}
                 onOpenConstants={() => setIsConstantsOpen(true)}
                 onOpenExamTrainer={() => setCurrentTab("cramming-arena")}
+                onOpenChapterExam={(chId) => {
+                  setExamChapterId(chId);
+                  setCurrentTab("chapter-exam");
+                }}
               />
             )}
 
@@ -179,6 +197,20 @@ export function App() {
                 sheet={SHEET_4_MASTERCLASS}
                 onOpenConstants={() => setIsConstantsOpen(true)}
                 onOpenExamTrainer={() => setCurrentTab("cramming-arena")}
+                onOpenChapterExam={(chId) => {
+                  setExamChapterId(chId);
+                  setCurrentTab("chapter-exam");
+                }}
+              />
+            )}
+
+            {/* Chapter Examination & Assessment Suite */}
+            {currentTab === "chapter-exam" && (
+              <ChapterExamArena
+                initialChapterId={examChapterId}
+                onOpenConstants={() => setIsConstantsOpen(true)}
+                onOpenCalculator={() => setIsCalculatorOpen(true)}
+                onNavigateToSheet={(sheetNum) => setCurrentTab(`sheet-${sheetNum}` as NavMode)}
               />
             )}
 
@@ -230,6 +262,13 @@ export function App() {
             {currentTab === "official-docs" && (
               <OfficialDocumentsViewer
                 onOpenTerminalWithTopic={handleOpenTerminalWithTopic}
+              />
+            )}
+
+            {/* Prompt Directory & Studio */}
+            {currentTab === "prompts" && (
+              <PromptDirectory
+                onNavigateToTab={setCurrentTab}
               />
             )}
 
@@ -303,6 +342,14 @@ export function App() {
         isOpen={isConstantsOpen}
         onClose={() => setIsConstantsOpen(false)}
       />
+
+      {/* Global Scientific Quantum Calculator Modal */}
+      {isCalculatorOpen && (
+        <ScientificCalculator
+          floating={true}
+          onClose={() => setIsCalculatorOpen(false)}
+        />
+      )}
     </div>
   );
 }

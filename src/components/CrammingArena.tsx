@@ -120,40 +120,40 @@ export const CrammingArena: React.FC<CrammingArenaProps> = ({ onOpenConstants })
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Top Banner: Cramming Arena Status */}
-      <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-950 to-indigo-950/30 border border-rose-900/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono text-xs border border-rose-500/30 flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-              <span>Modern Academy Cramming Arena</span>
-            </span>
-            <span className="text-xs text-slate-400 font-mono">10 Hard Mock Exams</span>
+      <div className="p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400">
+            <span className="text-rose-400 font-semibold">Cramming Arena</span>
+            <span aria-hidden="true" className="text-slate-600">·</span>
+            <span>10 Mock Examinations</span>
+            <span aria-hidden="true" className="text-slate-600">·</span>
+            <span>ELCn114 Modern Academy</span>
           </div>
           <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
             Numerical Exam Simulator
           </h1>
           <p className="text-xs sm:text-sm text-slate-300">
-            Multi-Step Calculations with Scientific Keypad & Tolerance Grading
+            Multi-step calculations with scientific keypad and real-time tolerance evaluation.
           </p>
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 md:pt-0">
-          <div className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-900 border border-slate-800 text-center">
+          <div className="px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-center">
             <span className="text-[10px] text-slate-400 uppercase font-mono block">Score</span>
-            <span className="text-sm sm:text-base font-bold font-mono text-emerald-400">
+            <span className="text-sm sm:text-base font-bold font-mono text-emerald-400 tabular-nums">
               {totalPoints} / {maxPoints} Pts
             </span>
           </div>
           <button
             onClick={onOpenConstants}
-            className="px-3.5 py-2 sm:py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-xs font-medium text-indigo-200 transition-colors min-h-[40px]"
+            className="px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[44px]"
           >
             Constants Sheet
           </button>
           <button
             onClick={handleResetCurrentExamProgress}
             title="Reset answers for current session"
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-850 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-800/60 text-xs font-medium text-slate-400 hover:text-rose-300 transition-colors min-h-[40px] flex items-center gap-1.5"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-850 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-800/60 text-xs font-medium text-slate-400 hover:text-rose-300 transition-colors min-h-[44px] flex items-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Reset Progress</span>
@@ -170,9 +170,9 @@ export const CrammingArena: React.FC<CrammingArenaProps> = ({ onOpenConstants })
               setSelectedExamId(exam.id);
               setCurrentQuestionIdx(0);
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 min-h-[44px] active:scale-95 ${
               selectedExamId === exam.id
-                ? "bg-rose-600 text-white shadow-md border border-rose-500/60"
+                ? "bg-rose-600 text-white shadow-md font-semibold"
                 : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
             }`}
           >
@@ -189,8 +189,8 @@ export const CrammingArena: React.FC<CrammingArenaProps> = ({ onOpenConstants })
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-lg">
             {/* Question Header */}
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-md bg-rose-500/20 text-rose-300 font-mono font-bold text-xs flex items-center justify-center border border-rose-500/30">
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono font-bold text-sm text-rose-400">
                   Q{currentQuestion.questionNumber}
                 </span>
                 <span className="text-xs font-semibold text-white">
@@ -389,7 +389,7 @@ const KeypadButton: React.FC<KeypadButtonProps> = ({ symbol, onClick, title, cla
     type="button"
     onClick={onClick}
     title={title}
-    className={`h-11 sm:h-10 rounded-xl bg-slate-950 hover:bg-slate-850 active:bg-slate-800 border border-slate-800 text-slate-200 font-mono text-center transition-all active:scale-95 flex items-center justify-center font-semibold ${className || ""}`}
+    className={`min-h-[44px] h-11 rounded-xl bg-slate-950 hover:bg-slate-850 active:bg-slate-800 border border-slate-800 text-slate-200 font-mono text-center transition-all active:scale-95 flex items-center justify-center font-semibold ${className || ""}`}
   >
     {symbol}
   </button>

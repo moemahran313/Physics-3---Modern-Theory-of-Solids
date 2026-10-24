@@ -9,24 +9,35 @@ import {
   Check, 
   ChevronDown, 
   ChevronUp,
+  ChevronRight,
   FileCheck2,
   Bookmark,
   Sparkles,
-  Printer
+  Printer,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
+import { ChapterId } from "../types";
+import { ChapterExamArena } from "./ChapterExamArena";
+import { CHAPTER_EXAM_QUESTIONS } from "../lib/chapterExamEngineData";
+import { MobileStepSolver, AIStepAnalysisResult } from "./MobileStepSolver";
 
 interface SheetsMasterclassViewProps {
   sheet: MasterclassSheet;
   onOpenConstants: () => void;
   onOpenExamTrainer?: () => void;
+  onOpenChapterExam?: (chapterId: ChapterId) => void;
 }
 
 export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
   sheet,
   onOpenConstants,
   onOpenExamTrainer,
+  onOpenChapterExam,
 }) => {
-  const [activeSection, setActiveSection] = useState<"all" | "theory" | "problems">("all");
+  const [activeSection, setActiveSection] = useState<"all" | "theory" | "problems" | "exam">("all");
+  const chapterExamCount = CHAPTER_EXAM_QUESTIONS.filter(q => q.chapterId === `ch${sheet.number}`).length;
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedProblems, setExpandedProblems] = useState<Record<string, boolean>>({
     [sheet.solvedProblems[0]?.id || ""]: true
@@ -63,14 +74,15 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Sheet Header Hero */}
-      <div className="mobile-pad-hero p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950/40 border border-slate-800 shadow-xl">
+      <div className="mobile-pad-hero p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono text-xs border border-indigo-500/30">
-                Official Department Sheet #{sheet.number}
-              </span>
-              <span className="text-xs text-slate-400 font-mono">ELCn114 Course Guide</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400">
+              <span className="text-cyan-400 font-semibold">Sheet {sheet.number}</span>
+              <span aria-hidden="true" className="text-slate-600">·</span>
+              <span>ELCn114 Course Guide</span>
+              <span aria-hidden="true" className="text-slate-600">·</span>
+              <span>Modern Academy</span>
             </div>
             <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
               {sheet.title}
@@ -88,21 +100,31 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
             <button
               onClick={() => window.print()}
               title="Print Sheet / Export to PDF"
-              className="px-3.5 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/40 border border-indigo-500/50 text-xs font-medium text-indigo-200 transition-colors min-h-[40px] flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[44px] flex items-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / PDF</span>
             </button>
             <button
               onClick={onOpenConstants}
-              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[40px] text-center"
+              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[44px] text-center"
             >
               Constants Keypad
             </button>
+            {onOpenChapterExam && (
+              <button
+                onClick={() => onOpenChapterExam(`ch${sheet.number}` as ChapterId)}
+                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors min-h-[44px] flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20"
+                title={`Launch Chapter ${sheet.number} Examination & Assessment`}
+              >
+                <ShieldCheck className="w-4 h-4 text-cyan-300" />
+                <span>Examine Sheet {sheet.number}</span>
+              </button>
+            )}
             {onOpenExamTrainer && (
               <button
                 onClick={onOpenExamTrainer}
-                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-xs font-medium text-rose-300 transition-colors min-h-[40px] text-center"
+                className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-medium text-white transition-colors min-h-[44px] text-center"
               >
                 Cram This Sheet
               </button>
@@ -140,6 +162,16 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
             >
               <span className="sm:hidden">Problems ({sheet.solvedProblems.length})</span>
               <span className="hidden sm:inline">Part (II): Problems ({sheet.solvedProblems.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveSection("exam")}
+              className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all min-h-[36px] flex items-center justify-center gap-1.5 ${
+                activeSection === "exam" ? "bg-cyan-600 text-white shadow-sm" : "text-cyan-400 hover:text-cyan-200"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span className="sm:hidden">Examine ({chapterExamCount})</span>
+              <span className="hidden sm:inline">Part (III): Examine Sheet {sheet.number} ({chapterExamCount})</span>
             </button>
           </div>
 
@@ -182,6 +214,28 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
       {/* Part (II): Solved Analytical Problems */}
       {(activeSection === "all" || activeSection === "problems") && (
         <section className="space-y-3 sm:space-y-4 pt-2">
+          {/* Chapter Examination Callout Banner */}
+          {onOpenChapterExam && (
+            <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-semibold">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>Interactive Testing Engine for Sheet {sheet.number}</span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Test your answers on Sheet {sheet.number} problems with real-time numerical analysis, analytical tolerances, and Modern Academy exam trap warnings.
+                </p>
+              </div>
+              <button
+                onClick={() => onOpenChapterExam(`ch${sheet.number}` as ChapterId)}
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors shrink-0 flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 min-h-[44px]"
+              >
+                <span>Launch Sheet {sheet.number} Exam Suite</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pb-1 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <FileCheck2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -209,6 +263,16 @@ export const SheetsMasterclassView: React.FC<SheetsMasterclassViewProps> = ({
               );
             })}
           </div>
+        </section>
+      )}
+
+      {/* Part (III): Embedded Chapter Examination & Assessment Suite */}
+      {activeSection === "exam" && (
+        <section className="space-y-4 pt-1">
+          <ChapterExamArena
+            initialChapterId={`ch${sheet.number}` as ChapterId}
+            onOpenConstants={onOpenConstants}
+          />
         </section>
       )}
     </div>
@@ -301,11 +365,9 @@ const TheoryCard: React.FC<TheoryCardProps> = ({ item, onCopy, copiedId }) => {
       </div>
 
       {/* Course Takeaway */}
-      <div className="mt-auto pt-3 border-t border-slate-800/80 flex items-start gap-2 text-[11px] sm:text-xs text-amber-300 font-medium leading-relaxed">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5"></span>
-        <div className="flex-1">
-          <FormattedContent content={item.takeaway} />
-        </div>
+      <div className="mt-auto pt-3 border-t border-slate-800/80 text-xs text-amber-300/90 leading-relaxed">
+        <span className="font-semibold text-amber-200">Takeaway: </span>
+        <FormattedContent content={item.takeaway} />
       </div>
     </div>
   );
@@ -326,15 +388,29 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
   onCopy,
   copiedId,
 }) => {
+  const [showPracticePad, setShowPracticePad] = useState(false);
+  const [showSolutionSteps, setShowSolutionSteps] = useState(true);
+  const [stepScore, setStepScore] = useState<number | null>(null);
+
+  const handleSaveSheetWork = (
+    _steps: string[],
+    _finalLatex: string,
+    analysis?: AIStepAnalysisResult
+  ) => {
+    if (analysis) {
+      setStepScore(analysis.scorePercent);
+    }
+  };
+
   return (
     <div className="mobile-optimized-card rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden transition-all shadow-sm">
-      {/* Problem Header (Click to toggle) */}
-      <div 
+      {/* Problem Header (Tap to toggle) */}
+      <div
         onClick={onToggle}
-        className="p-3.5 sm:p-4 cursor-pointer hover:bg-slate-800/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 select-none"
+        className="p-3.5 sm:p-4 cursor-pointer hover:bg-slate-850/60 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 select-none"
       >
-        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
-          <span className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+        <div className="flex items-start sm:items-center gap-3 min-w-0">
+          <span className="font-mono text-sm font-bold text-cyan-400 shrink-0 mt-0.5 sm:mt-0">
             #{problem.problemNumber}
           </span>
           <div className="min-w-0">
@@ -347,12 +423,17 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
-          <span className="text-[11px] sm:text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Ans: {problem.officialSolution.finalValue} {problem.officialSolution.units}
+        <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
+          {stepScore !== null && (
+            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-cyan-300 border border-indigo-500/50">
+              {stepScore}% Step Credit
+            </span>
+          )}
+          <span className="text-xs font-mono text-slate-400">
+            {problem.officialSolution.calculationSteps.length} Steps
           </span>
-          <button 
-            className="p-1 text-slate-400 hover:text-white"
+          <button
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             aria-label={isExpanded ? "Collapse problem" : "Expand problem"}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -360,100 +441,186 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
         </div>
       </div>
 
-      {/* Solution Body (collapsible on screen, always visible for print) */}
-      <div className={`${isExpanded ? "block" : "hidden print:block"} p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs`}>
+      {/* Solution & Step Practice Body */}
+      <div
+        className={`${
+          isExpanded ? "block" : "hidden print:block"
+        } p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs sm:text-sm`}
+      >
         {/* Statement */}
-          <div className="p-3 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 leading-relaxed text-xs sm:text-sm">
-            <span className="text-slate-400 font-mono font-bold text-[10px] uppercase block mb-1">
-              Official Problem Statement:
+        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-100 leading-relaxed text-sm sm:text-base">
+          <span className="text-cyan-400 font-mono font-bold text-[11px] uppercase block mb-1">
+            Problem Statement:
+          </span>
+          <FormattedContent content={problem.statement} />
+        </div>
+
+        {/* Given & Required */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <span className="text-[11px] font-bold text-indigo-300 uppercase font-mono block mb-1.5">
+              What Is Given:
             </span>
-            <FormattedContent content={problem.statement} />
+            <ul className="space-y-1.5 text-slate-200 font-mono text-xs sm:text-sm">
+              {problem.givenParameters.map((p, i) => (
+                <li key={i} className="flex items-center gap-2 overflow-x-auto">
+                  <span className="text-indigo-400 shrink-0">•</span>
+                  <MathView math={p} displayMode={false} />
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Given Parameters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1.5">
-                Given Parameters:
-              </span>
-              <ul className="space-y-1 text-slate-300 font-mono">
-                {problem.givenParameters.map((p, i) => (
-                  <li key={i} className="flex items-center gap-1.5 overflow-x-auto">
-                    <span className="text-indigo-400 shrink-0">•</span>
-                    <MathView math={p} displayMode={false} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1.5">
-                Required Quantities:
-              </span>
-              <ul className="space-y-1 text-slate-300 font-mono">
-                {problem.requiredAnswers.map((r, i) => (
-                  <li key={i} className="flex items-center gap-1.5 overflow-x-auto">
-                    <span className="text-cyan-400 shrink-0">•</span>
-                    <MathView math={r} displayMode={false} />
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <span className="text-[11px] font-bold text-cyan-300 uppercase font-mono block mb-1.5">
+              What We Want to Find:
+            </span>
+            <ul className="space-y-1.5 text-slate-200 font-mono text-xs sm:text-sm">
+              {problem.requiredAnswers.map((r, i) => (
+                <li key={i} className="flex items-center gap-2 overflow-x-auto">
+                  <span className="text-cyan-400 shrink-0">•</span>
+                  <MathView math={r} displayMode={false} />
+                </li>
+              ))}
+            </ul>
           </div>
+        </div>
 
-          {/* Calculation Steps */}
-          <div className="space-y-2.5">
+        {/* Toggle Practice Mode vs Easy Step Breakdown */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-900 border border-indigo-500/40">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-white">
+              Want to solve this step-by-step with AI hints & LaTeX pad?
+            </span>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPracticePad((prev) => {
+                  const next = !prev;
+                  if (next) setShowSolutionSteps(false);
+                  else setShowSolutionSteps(true);
+                  return next;
+                });
+              }}
+              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors min-h-[40px]"
+            >
+              {showPracticePad ? "Close Practice Pad" : "Practice Steps with AI"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSolutionSteps((prev) => !prev)}
+              className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[40px]"
+            >
+              {showSolutionSteps ? "Hide Solution Steps" : "Show Easy Steps"}
+            </button>
+          </div>
+        </div>
+
+        {/* Interactive Mobile LaTeX & AI Step Solver */}
+        {showPracticePad && (
+          <MobileStepSolver
+            problemId={problem.id}
+            problemTitle={problem.title}
+            problemPrompt={problem.statement}
+            governingFormula={problem.officialSolution.governingFormula}
+            officialSteps={problem.officialSolution.calculationSteps.map((s) => ({
+              step: s.step,
+              latex: s.latex,
+              explanation: s.note,
+            }))}
+            expectedValue={problem.officialSolution.finalValue}
+            units={problem.officialSolution.units}
+            onSaveWork={handleSaveSheetWork}
+            compact={true}
+          />
+        )}
+
+        {/* Easy Step-by-Step Solution Breakdown (Focused on Method & Steps) */}
+        {showSolutionSteps && (
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase font-mono">
-                Step-by-Step Solution:
+              <span className="text-xs font-bold text-emerald-400 uppercase font-mono">
+                Easy Step-by-Step Breakdown (Focus on Method):
               </span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCopy(problem.officialSolution.calculationSteps.map(s => `${s.step}: ${s.latex}`).join("\n"), problem.id);
+                  onCopy(
+                    problem.officialSolution.calculationSteps
+                      .map((s) => `${s.step}: ${s.latex}`)
+                      .join("\n"),
+                    problem.id
+                  );
                 }}
-                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800/80 active:scale-95"
+                className="flex items-center gap-1 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 active:scale-95"
               >
-                {copiedId === problem.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copiedId === problem.id ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
                 <span>{copiedId === problem.id ? "Copied" : "Copy Steps"}</span>
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono overflow-x-auto">
-              <span className="text-[10px] text-slate-400 block mb-1">Governing Formula:</span>
-              <div className="overflow-x-auto max-w-full pb-1">
+            {/* Step 0: Starting Formula */}
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+              <span className="text-xs font-mono font-bold text-indigo-300 block">
+                Starting Formula:
+              </span>
+              <div className="overflow-x-auto max-w-full py-1">
                 <MathView math={problem.officialSolution.governingFormula} displayMode={true} />
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* Numbered Step Cards */}
+            <div className="space-y-2.5">
               {problem.officialSolution.calculationSteps.map((s, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                  <span className="text-[11px] text-slate-300 font-medium block mb-1">
-                    Step {idx + 1}: {s.step}
-                  </span>
-                  <div className="py-1 overflow-x-auto max-w-full">
+                <div
+                  key={idx}
+                  className="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold">
+                      Step {idx + 1}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-white">{s.step}</span>
+                  </div>
+
+                  {s.note && (
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                      <FormattedContent content={s.note} />
+                    </p>
+                  )}
+
+                  <div className="py-2 px-3 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto max-w-full">
                     <MathView math={s.latex} displayMode={true} />
                   </div>
-                  {s.note && <p className="text-[10px] text-slate-400 italic mt-1">{s.note}</p>}
                 </div>
               ))}
             </div>
 
-            {/* Exam Trap Warning */}
+            {/* Exam Pitfall Warning */}
             {problem.pitfallWarning && (
-              <div className="p-3 sm:p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5">
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold text-[11px] block uppercase font-mono">Modern Academy Exam Pitfall:</span>
-                  <div className="text-[11px] text-rose-200/90 mt-0.5 leading-relaxed">
+                <div className="space-y-0.5">
+                  <span className="font-bold text-xs block uppercase font-mono text-rose-300">
+                    Common Mistake to Avoid:
+                  </span>
+                  <div className="text-xs sm:text-sm leading-relaxed">
                     <FormattedContent content={problem.pitfallWarning} />
                   </div>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
     </div>
   );
 };
+
