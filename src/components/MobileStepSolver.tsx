@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { MathView, FormattedContent } from "./LaTeXRenderer";
-import { MobileLaTeXInput } from "./MobileLaTeXInput";
-import { formatToCleanLatex, parseScientificInput } from "../lib/physicsEvaluator";
+import { MobileLaTeXInput, renderLatexWithCursor } from "./MobileLaTeXInput";
+import {
+  formatToCleanLatex,
+  parseScientificInput,
+  evaluateNotebookStepLocally,
+} from "../lib/physicsEvaluator";
 import {
   interceptAndVerifyDerivation,
   fetchRealtimeSocraticHint,
@@ -15,7 +19,8 @@ import {
   BookOpen,
   Wand2,
   Loader2,
-  HelpCircle,
+  AlertTriangle,
+  Keyboard,
 } from "lucide-react";
 
 export interface StepCheckItem {
@@ -72,84 +77,144 @@ export const MobileStepSolver: React.FC<MobileStepSolverProps> = ({
   initialFinalLatex = "",
   onSaveWork,
 }) => {
-  const [steps, setSteps] = useState<string[]>(
-    initialSteps && initialSteps.length > 0 ? initialSteps : [""]
-  );
-  const [finalLatex, setFinalLatex] = useState<string>(initialFinalLatex);
+  // Combine initial steps + initialFinalLatex into a single clean notebook lines array
+  const buildInitialLines = (): string[] => {
+    const base =
+      initialSteps && initialSteps.some((s) => s.trim().length > 0)
+        ? [...initialSteps.filter((s) => s.trim().length > 0)]
+        : [];
+    if (
+      initialFinalLatex &&
+      initialFinalLatex.trim().length > 0 &&
+      !base.includes(initialFinalLatex.trim())
+    ) {
+      base.push(initialFinalLatex.trim());
+    }
+    return base.length > 0 ? base : [""];
+  };
 
-  // Active target for the custom MobileLaTeXInput keypad: step index or "final"
-  const [activeField, setActiveField] = useState<number | "final">(0);
+  const [lines, setLines] = useState<string[]>(buildInitialLines);
+  // null when sticky keypad dock is closed; index of focused notebook line when open
+  const [focusedLineIdx, setFocusedLineIdx] = useState<number | null>(null);
+  const [cursorMap, setCursorMap] = useState<Record<number, number>>({ 0: 0 });
 
   // AI states
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<AIStepAnalysisResult | null>(null);
-
   const [isLoadingHint, setIsLoadingHint] = useState<boolean>(false);
-  const [aiHintText, setAiHintText] = useState<string | null>(null);
-
+  const [inlineHintText, setInlineHintText] = useState<string | null>(null);
   const [isEasyStepsOpen, setIsEasyStepsOpen] = useState<boolean>(false);
-  const [isLoadingEasyExplain, setIsLoadingEasyExplain] = useState<boolean>(false);
-  const [aiEasyExplainText, setAiEasyExplainText] = useState<string | null>(null);
 
   useEffect(() => {
-    setSteps(initialSteps && initialSteps.length > 0 ? initialSteps : [""]);
-    setFinalLatex(initialFinalLatex || "");
-    setActiveField(0);
+    const init = buildInitialLines();
+    setLines(init);
+    setFocusedLineIdx(null);
+    setCursorMap({ 0: (init[0] || "").length });
     setAnalysisResult(null);
-    setAiHintText(null);
-    setAiEasyExplainText(null);
+    setInlineHintText(null);
+    setIsEasyStepsOpen(false);
   }, [problemId]);
 
-  const activeValue =
-    activeField === "final" ? finalLatex : steps[activeField] ?? "";
+  // Extract the best numerical line (or last non-empty line) to sync with parent finalLatex
+  const syncWithParent = (updatedLines: string[], aiResult?: AIStepAnalysisResult) => {
+    const nonEmpty = updatedLines.filter((l) => l.trim().length > 0);
+    // Find the last line that parses as a number, or fallback to last non-empty line
+    let bestFinal = nonEmpty[nonEmpty.length - 1] || "";
+    for (let i = nonEmpty.length - 1; i >= 0; i--) {
+      if (parseScientificInput(nonEmpty[i]) !== null) {
+        bestFinal = nonEmpty[i];
+        break;
+      }
+    }
+    onSaveWork?.(updatedLines, bestFinal, aiResult || analysisResult || undefined);
+  };
 
-  const handleActiveLatexChange = (newLatex: string) => {
-    if (activeField === "final") {
-      setFinalLatex(newLatex);
-      onSaveWork?.(steps, newLatex, analysisResult || undefined);
+  const handleLineChange = (idx: number, newLatex: string) => {
+    const next = [...lines];
+    next[idx] = newLatex;
+    setLines(next);
+    syncWithParent(next);
+  };
+
+  const handleFocusLine = (idx: number) => {
+    setFocusedLineIdx(idx);
+    setCursorMap((prev) => ({
+      ...prev,
+      [idx]: prev[idx] !== undefined ? prev[idx] : (lines[idx] || "").length,
+    }));
+  };
+
+  const handleNextLine = () => {
+    const currentIdx = focusedLineIdx ?? lines.length - 1;
+    if (currentIdx < lines.length - 1) {
+      handleFocusLine(currentIdx + 1);
     } else {
-      const next = [...steps];
-      next[activeField] = newLatex;
-      setSteps(next);
-      onSaveWork?.(next, finalLatex, analysisResult || undefined);
+      const next = [...lines, ""];
+      setLines(next);
+      const newIdx = next.length - 1;
+      setFocusedLineIdx(newIdx);
+      setCursorMap((prev) => ({ ...prev, [newIdx]: 0 }));
     }
   };
 
-  const handleAddStep = () => {
-    const next = [...steps, ""];
-    setSteps(next);
-    setActiveField(next.length - 1);
-  };
-
-  const handleRemoveStep = (idx: number) => {
-    if (steps.length <= 1) {
-      setSteps([""]);
-      setActiveField(0);
+  const handleRemoveLine = (idx: number) => {
+    if (lines.length <= 1) {
+      setLines([""]);
+      setCursorMap({ 0: 0 });
       return;
     }
-    const next = steps.filter((_, i) => i !== idx);
-    setSteps(next);
-    setActiveField(Math.max(0, idx - 1));
+    const next = lines.filter((_, i) => i !== idx);
+    setLines(next);
+    if (focusedLineIdx !== null) {
+      setFocusedLineIdx(Math.max(0, Math.min(next.length - 1, focusedLineIdx)));
+    }
+    syncWithParent(next);
   };
 
-  const handleFillFormula = () => {
+  const handleInsertFormula = () => {
     const cleanForm = governingFormula.replace(/^\$+|\$+$/g, "").trim();
-    handleActiveLatexChange(cleanForm);
+    const targetIdx = focusedLineIdx ?? 0;
+    const next = [...lines];
+    if (!next[targetIdx] || !next[targetIdx].trim()) {
+      next[targetIdx] = cleanForm;
+      setLines(next);
+      setFocusedLineIdx(targetIdx);
+      setCursorMap((prev) => ({ ...prev, [targetIdx]: cleanForm.length }));
+      syncWithParent(next);
+    } else {
+      next.push(cleanForm);
+      const newIdx = next.length - 1;
+      setLines(next);
+      setFocusedLineIdx(newIdx);
+      setCursorMap((prev) => ({ ...prev, [newIdx]: cleanForm.length }));
+      syncWithParent(next);
+    }
   };
 
-  // Intercept user inputs via AI Logic Wrapper to verify derivation logical flow & Socratic hints
+  // Instant 0ms local evaluation across all lines
+  const localLineChecks = lines.map((line) =>
+    evaluateNotebookStepLocally(line, governingFormula, officialSteps, expectedValue, units)
+  );
+
+  const isLocallySolved = localLineChecks.some((c) => c.status === "value-correct");
+  const localMaxScore = localLineChecks.reduce(
+    (max, c) => Math.max(max, c.scorePercent || 0),
+    0
+  );
+
+  // On-demand AI Step Verification (attaches inline feedback per line, no wall of text)
   const handleVerifyDerivationFlow = async () => {
-    const hasWork =
-      steps.some((s) => s.trim().length > 0) || finalLatex.trim().length > 0;
-    if (!hasWork) {
-      setAiHintText(
-        `Tap **"Insert Formula"** ($${governingFormula}$) or use the physics symbol bar ($\\hbar, \\lambda, \\nu, \\psi$) to start Step 1, or tap **"Socratic Hint"** for a guiding question!`
+    const nonEmpty = lines.filter((s) => s.trim().length > 0);
+    if (nonEmpty.length === 0) {
+      setInlineHintText(
+        `Start on Line 1 by tapping **Formula** ($${governingFormula.replace(/^\$+|\$+$/g, "")}$) or tapping the notebook line to open the math keypad.`
       );
       return;
     }
 
     setIsAnalyzing(true);
     try {
+      const lastLine = nonEmpty[nonEmpty.length - 1] || "";
       const data = await interceptAndVerifyDerivation({
         problemId,
         problemTitle,
@@ -158,11 +223,11 @@ export const MobileStepSolver: React.FC<MobileStepSolverProps> = ({
         officialSteps,
         expectedValue,
         units,
-        studentSteps: steps,
-        studentAnswerLatex: finalLatex,
+        studentSteps: lines,
+        studentAnswerLatex: lastLine,
       });
       setAnalysisResult(data);
-      onSaveWork?.(steps, formatToCleanLatex(finalLatex), data);
+      syncWithParent(lines, data);
     } catch (err) {
       console.error("AI derivation verification error:", err);
     } finally {
@@ -170,10 +235,10 @@ export const MobileStepSolver: React.FC<MobileStepSolverProps> = ({
     }
   };
 
-  // Request real-time Socratic hint from AI Wrapper
   const handleAskSocraticHint = async () => {
     setIsLoadingHint(true);
     try {
+      const nonEmpty = lines.filter((s) => s.trim().length > 0);
       const hint = await fetchRealtimeSocraticHint(
         {
           problemTitle,
@@ -182,12 +247,12 @@ export const MobileStepSolver: React.FC<MobileStepSolverProps> = ({
           officialSteps,
           expectedValue,
           units,
-          studentSteps: steps,
-          studentAnswerLatex: finalLatex,
+          studentSteps: lines,
+          studentAnswerLatex: nonEmpty[nonEmpty.length - 1] || "",
         },
         "hint"
       );
-      setAiHintText(hint);
+      setInlineHintText(hint);
     } catch (err) {
       console.error("Socratic hint error:", err);
     } finally {
@@ -195,488 +260,347 @@ export const MobileStepSolver: React.FC<MobileStepSolverProps> = ({
     }
   };
 
-  const handleExplainEasy = async () => {
-    setIsEasyStepsOpen(true);
-    if (aiEasyExplainText) return;
-    setIsLoadingEasyExplain(true);
-    try {
-      const walkthrough = await fetchRealtimeSocraticHint(
-        {
-          problemTitle,
-          problemPrompt,
-          governingFormula,
-          officialSteps,
-          expectedValue,
-          units,
-          studentSteps: steps,
-          studentAnswerLatex: finalLatex,
-        },
-        "explain-easy"
-      );
-      setAiEasyExplainText(walkthrough);
-    } catch (err) {
-      console.error("Explain easy error:", err);
-    } finally {
-      setIsLoadingEasyExplain(false);
-    }
-  };
-
-  const parsedFinalPreview = parseScientificInput(finalLatex);
+  const activeIdx = focusedLineIdx ?? 0;
+  const activeValue = lines[activeIdx] ?? "";
+  const activeCursor = cursorMap[activeIdx] ?? activeValue.length;
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl bg-slate-950 border border-slate-800 p-3.5 sm:p-5 space-y-4 shadow-lg">
-        {/* Header & Quick Socratic Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>Mobile LaTeX Derivation & AI Logic Verifier</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Tap symbols (<MathView math="\hbar, \lambda, \nu, \psi" displayMode={false} />) to build your steps—Gemini verifies <strong className="text-slate-200">logical flow</strong> (not string matching) and gives Socratic hints.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={handleFillFormula}
-              className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-xs font-semibold text-indigo-200 transition-colors min-h-[42px] flex items-center justify-center gap-1.5"
-            >
-              <Wand2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Insert Formula</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleAskSocraticHint}
-              disabled={isLoadingHint}
-              className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-amber-950/70 hover:bg-amber-900/70 border border-amber-500/40 text-xs font-semibold text-amber-200 transition-colors min-h-[42px] flex items-center justify-center gap-1.5"
-            >
-              {isLoadingHint ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-              ) : (
-                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-              )}
-              <span>Socratic Hint</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Real-Time Socratic Hint Banner */}
-        {aiHintText && (
-          <div className="p-3.5 sm:p-4 rounded-xl bg-amber-950/30 border border-amber-500/50 space-y-1.5 text-sm text-slate-100">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-amber-400" />
-                <span>Real-Time Socratic Guidance</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setAiHintText(null)}
-                className="text-xs text-slate-400 hover:text-white"
+    <div className={`space-y-3 ${focusedLineIdx !== null ? "pb-56" : ""}`}>
+      {/* Sleek Flat Toolbar: Title + Instant Status + Quick Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
+            Solution Notebook
+          </span>
+          <span className="text-slate-600">·</span>
+          <span className="text-xs font-mono text-slate-400">
+            Target: <strong className="text-slate-200">[{units}]</strong>
+          </span>
+          {(isLocallySolved || (analysisResult && analysisResult.scorePercent > 0) || localMaxScore > 0) && (
+            <>
+              <span className="text-slate-600">·</span>
+              <span
+                className={`text-xs font-mono font-bold ${
+                  isLocallySolved || analysisResult?.overallStatus === "correct"
+                    ? "text-emerald-400"
+                    : "text-cyan-300"
+                }`}
               >
-                Dismiss ✕
-              </button>
-            </div>
-            <div className="leading-relaxed text-xs sm:text-sm">
-              <FormattedContent content={aiHintText} />
-            </div>
-          </div>
-        )}
-
-        {/* Derivation Step Slots (Tap any step to edit it in the MobileLaTeXInput below) */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-300">
-              1. Select a Step or Final Answer Box to Edit:
-            </span>
-            <button
-              type="button"
-              onClick={handleAddStep}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-cyan-300 transition-colors min-h-[38px] flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Step</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2">
-            {steps.map((stepVal, idx) => {
-              const isSelected = activeField === idx;
-              const cleanStep = formatToCleanLatex(stepVal);
-              return (
-                <div
-                  key={idx}
-                  onClick={() => setActiveField(idx)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                    isSelected
-                      ? "bg-slate-900 border-cyan-500 ring-1 ring-cyan-500/40"
-                      : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-                  }`}
-                >
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded ${
-                          isSelected
-                            ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40"
-                            : "bg-slate-800 text-slate-400"
-                        }`}
-                      >
-                        Step {idx + 1}
-                      </span>
-                      <span className="text-[11px] text-slate-400 truncate">
-                        {idx === 0 ? "Formula / Law" : "Substitution / Intermediate"}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto py-0.5">
-                      {cleanStep ? (
-                        <MathView math={cleanStep} displayMode={false} />
-                      ) : (
-                        <span className="text-xs text-slate-500 italic">
-                          Tap here and use the physics symbol bar below...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {steps.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveStep(idx);
-                      }}
-                      className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 shrink-0"
-                      title="Remove step"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Final Answer Slot */}
-            <div
-              onClick={() => setActiveField("final")}
-              className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                activeField === "final"
-                  ? "bg-slate-900 border-indigo-500 ring-1 ring-indigo-500/40"
-                  : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-              }`}
-            >
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded ${
-                      activeField === "final"
-                        ? "bg-indigo-950 text-indigo-300 border border-indigo-500/40"
-                        : "bg-slate-800 text-slate-400"
-                    }`}
-                  >
-                    Final LaTeX Answer
-                  </span>
-                  <span className="text-[11px] font-mono text-cyan-400">
-                    Unit: [{units}]
-                  </span>
-                </div>
-                <div className="overflow-x-auto py-0.5">
-                  {finalLatex.trim() ? (
-                    <div className="flex items-center gap-2 text-emerald-300">
-                      <MathView math={formatToCleanLatex(finalLatex)} displayMode={false} />
-                      <span className="text-xs font-mono text-slate-400">[{units}]</span>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-slate-500 italic">
-                      Tap here to input final numerical or symbolic LaTeX result...
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {parsedFinalPreview !== null && (
-                <span className="text-[11px] font-mono text-slate-400 shrink-0 hidden sm:inline">
-                  = {parsedFinalPreview.toExponential(3)}
-                </span>
-              )}
-            </div>
-          </div>
+                {isLocallySolved
+                  ? "100% Verified"
+                  : `${Math.max(localMaxScore, analysisResult?.scorePercent || 0)}% Credit`}
+              </span>
+            </>
+          )}
         </div>
 
-        {/* Dedicated Custom Mobile-Optimized LaTeX Input with Physics Symbol Row */}
-        <MobileLaTeXInput
-          value={activeValue}
-          onChange={handleActiveLatexChange}
-          onSubmit={handleVerifyDerivationFlow}
-          label={
-            activeField === "final"
-              ? `Editing Final Answer in [${units}]`
-              : `Editing Step ${activeField + 1} (Tap symbols below)`
-          }
-          unitLabel={activeField === "final" ? units : undefined}
-          governingFormula={governingFormula}
-        />
-
-        {/* Primary Action Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-1">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={handleVerifyDerivationFlow}
-            disabled={isAnalyzing}
-            className="flex-1 py-3.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-sm font-bold text-white transition-all shadow-lg shadow-indigo-600/25 min-h-[48px] flex items-center justify-center gap-2"
+            onClick={handleInsertFormula}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-indigo-200 transition-colors min-h-[36px] flex items-center gap-1"
           >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Gemini Verifying Logical Flow...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Verify Logical Flow & Analyze Steps</span>
-              </>
-            )}
+            <Wand2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Formula</span>
           </button>
-
           <button
             type="button"
-            onClick={() => {
-              if (!isEasyStepsOpen) {
-                handleExplainEasy();
-              } else {
-                setIsEasyStepsOpen(false);
-              }
-            }}
-            className="py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs sm:text-sm font-semibold text-cyan-300 transition-colors min-h-[48px] flex items-center justify-center gap-2"
+            onClick={handleAskSocraticHint}
+            disabled={isLoadingHint}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-amber-200 transition-colors min-h-[36px] flex items-center gap-1"
           >
-            <BookOpen className="w-4 h-4 text-cyan-400" />
-            <span>{isEasyStepsOpen ? "Hide Easy Explanation" : "Show Easy Step-by-Step"}</span>
+            {isLoadingHint ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+            ) : (
+              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span>Hint</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsEasyStepsOpen(!isEasyStepsOpen)}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 hover:text-white transition-colors min-h-[36px] flex items-center gap-1"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{isEasyStepsOpen ? "Hide Steps" : "Solution"}</span>
           </button>
         </div>
       </div>
 
-      {/* AI Logical Flow Verification & Socratic Feedback Card */}
-      {analysisResult && (
-        <div
-          className={`rounded-2xl border p-4 sm:p-5 space-y-4 transition-all ${
-            analysisResult.overallStatus === "correct"
-              ? "bg-emerald-950/30 border-emerald-500/60"
-              : analysisResult.overallStatus === "good-steps" ||
-                analysisResult.overallStatus === "partial-steps"
-              ? "bg-indigo-950/40 border-indigo-500/60"
-              : "bg-amber-950/30 border-amber-500/60"
-          }`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-            <div className="flex items-center gap-2.5">
-              {analysisResult.overallStatus === "correct" ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              ) : (
-                <Sparkles className="w-5 h-5 text-cyan-400 shrink-0" />
-              )}
-              <div>
-                <h4 className="text-sm sm:text-base font-bold text-white">
-                  {analysisResult.headline}
-                </h4>
-                <span className="text-[11px] font-mono text-slate-400">
-                  {analysisResult.logicalFlowValid
-                    ? "Logical Derivation Flow Verified · Gemini Engine"
-                    : "Socratic Step Diagnostic · Gemini Engine"}
-                </span>
-              </div>
-            </div>
-
-            <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-sm font-mono font-bold text-emerald-400">
-              {analysisResult.scorePercent}% Credit
-            </div>
+      {/* Compact 1-Line Socratic Hint Banner (Only when requested) */}
+      {inlineHintText && (
+        <div className="py-2 px-3 rounded-lg bg-amber-950/30 border border-amber-500/40 flex items-start justify-between gap-2 text-xs sm:text-sm text-amber-100">
+          <div className="leading-relaxed">
+            <strong className="font-mono text-amber-300 mr-1.5">Hint:</strong>
+            <FormattedContent content={inlineHintText} />
           </div>
-
-          <div className="text-sm sm:text-base text-slate-100 leading-relaxed">
-            <FormattedContent content={analysisResult.easyExplanation} />
-          </div>
-
-          {/* Real-Time Socratic Question for Incorrect or Next Step */}
-          {analysisResult.socraticHint && (
-            <div className="p-3.5 rounded-xl bg-amber-950/35 border border-amber-500/50 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-amber-300">
-                <HelpCircle className="w-4 h-4 text-amber-400" />
-                <span>Socratic Guiding Question:</span>
-              </div>
-              <div className="text-xs sm:text-sm text-slate-100 leading-relaxed">
-                <FormattedContent content={analysisResult.socraticHint} />
-              </div>
-            </div>
-          )}
-
-          {/* Individual Step-by-Step Logical Flow Checks */}
-          {analysisResult.stepChecks && analysisResult.stepChecks.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-xs font-mono font-bold text-slate-300 block">
-                Step-by-Step Logical Flow Verification:
-              </span>
-              {analysisResult.stepChecks.map((sc, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3 rounded-xl border space-y-1.5 ${
-                    sc.isCorrect
-                      ? "bg-emerald-950/25 border-emerald-500/40"
-                      : "bg-amber-950/25 border-amber-500/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
-                      {sc.isCorrect ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      ) : (
-                        <HelpCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                      )}
-                      <span>{sc.stepLabel}</span>
-                    </span>
-                    <span
-                      className={`text-[11px] font-mono ${
-                        sc.isCorrect ? "text-emerald-300" : "text-amber-300"
-                      }`}
-                    >
-                      {sc.logicalTransitionNote ||
-                        (sc.isCorrect ? "Logically Valid" : "Check Step Logic")}
-                    </span>
-                  </div>
-
-                  {sc.studentLatex && (
-                    <div className="px-3 py-1.5 rounded-lg bg-slate-950/80 overflow-x-auto">
-                      <MathView math={formatToCleanLatex(sc.studentLatex)} displayMode={false} />
-                    </div>
-                  )}
-
-                  <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                    <FormattedContent content={sc.easyComment} />
-                  </div>
-
-                  {/* Step-specific Socratic Prompt if incorrect */}
-                  {!sc.isCorrect && sc.socraticPrompt && (
-                    <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-xs text-amber-200">
-                      <FormattedContent content={sc.socraticPrompt} />
-                    </div>
-                  )}
-
-                  {!sc.isCorrect && sc.correctedLatex && (
-                    <div className="pt-1">
-                      <span className="text-[11px] font-mono text-cyan-300 block mb-1">
-                        Reference Form:
-                      </span>
-                      <div className="px-3 py-2 rounded-lg bg-slate-950 border border-cyan-500/30 overflow-x-auto">
-                        <MathView math={sc.correctedLatex} displayMode={false} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {analysisResult.nextHint && (
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/30 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-cyan-300">
-                <Lightbulb className="w-4 h-4 text-cyan-400" />
-                <span>Next Derivation Step Tip:</span>
-              </div>
-              <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                <FormattedContent content={analysisResult.nextHint} />
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setInlineHintText(null)}
+            className="text-xs font-mono text-slate-400 hover:text-white shrink-0"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Easy Step-by-Step Explanation Panel */}
-      {isEasyStepsOpen && (
-        <div className="rounded-2xl bg-slate-950 border border-slate-800 p-4 sm:p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-cyan-400" />
-              <h4 className="text-sm sm:text-base font-bold text-white">
-                Easy Step-by-Step Guide (How & Why)
-              </h4>
+      {/* Clean Edge-to-Edge Notebook Lines (No Box-in-Box Nesting!) */}
+      <div className="border-y border-slate-800 divide-y divide-slate-800/80 bg-slate-950/50">
+        {lines.map((lineVal, idx) => {
+          const isFocused = focusedLineIdx === idx;
+          const localCheck = localLineChecks[idx];
+          const aiStepCheck = analysisResult?.stepChecks?.[idx];
+          const cursorPos = cursorMap[idx] ?? lineVal.length;
+          const renderedMath = renderLatexWithCursor(lineVal, cursorPos, isFocused);
+
+          return (
+            <div
+              key={idx}
+              onClick={() => handleFocusLine(idx)}
+              className={`py-2.5 px-2 sm:px-3 transition-colors cursor-text ${
+                isFocused ? "bg-indigo-950/25" : "hover:bg-slate-900/40"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                {/* Line Number + Live Rendered Math with Real Cursor */}
+                <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-x-auto scrollbar-none py-0.5">
+                  <span
+                    className={`text-xs font-mono shrink-0 select-none ${
+                      isFocused ? "text-cyan-400 font-bold" : "text-slate-500"
+                    }`}
+                  >
+                    {idx + 1}.
+                  </span>
+
+                  {lineVal.trim() || isFocused ? (
+                    <div className="text-sm sm:text-base text-white overflow-x-auto max-w-full">
+                      <MathView
+                        math={
+                          lineVal.trim()
+                            ? renderedMath
+                            : "{\\color{#22d3ee}{\\boldsymbol{\\mid}}}"
+                        }
+                        displayMode={false}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs sm:text-sm text-slate-500 italic select-none flex items-center gap-1.5">
+                      <Keyboard className="w-3.5 h-3.5 text-slate-600" />
+                      <span>
+                        {idx === 0
+                          ? "Tap to write formula or answer..."
+                          : "Tap to write next step or final number..."}
+                      </span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Right Side: 0ms Instant Local Check + Delete Line */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {localCheck.badgeText && (
+                    <span
+                      className={`text-[11px] font-mono font-semibold ${
+                        localCheck.status === "value-correct" ||
+                        localCheck.status === "formula-match"
+                          ? "text-emerald-400"
+                          : localCheck.status === "value-close"
+                          ? "text-cyan-300"
+                          : "text-amber-400"
+                      }`}
+                    >
+                      {localCheck.badgeText}
+                    </span>
+                  )}
+
+                  {!localCheck.badgeText && aiStepCheck && (
+                    <span
+                      className={`text-[11px] font-mono ${
+                        aiStepCheck.isCorrect ? "text-emerald-400" : "text-amber-400"
+                      }`}
+                    >
+                      {aiStepCheck.isCorrect ? "✓ Valid" : "Check step"}
+                    </span>
+                  )}
+
+                  {lines.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveLine(idx);
+                      }}
+                      className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                      title="Delete line"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Instant 0ms Trap Warning or Inline AI Coaching Note directly under the line */}
+              {(localCheck.inlineHint || (aiStepCheck && !aiStepCheck.isCorrect)) && (
+                <div className="mt-1.5 pl-5 text-xs text-amber-300/95 flex items-start gap-1.5 leading-snug">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <FormattedContent
+                      content={
+                        localCheck.inlineHint ||
+                        aiStepCheck?.socraticPrompt ||
+                        aiStepCheck?.easyComment ||
+                        ""
+                      }
+                    />
+                  </div>
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
+
+      {/* Notebook Footer Controls: + New Line & On-Demand AI Step Check */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const next = [...lines, ""];
+              setLines(next);
+              const newIdx = next.length - 1;
+              setFocusedLineIdx(newIdx);
+              setCursorMap((prev) => ({ ...prev, [newIdx]: 0 }));
+            }}
+            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-cyan-300 transition-colors min-h-[38px] flex items-center gap-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Line</span>
+          </button>
+
+          {focusedLineIdx === null && (
+            <button
+              type="button"
+              onClick={() => handleFocusLine(lines.length - 1)}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 transition-colors min-h-[38px] flex items-center gap-1.5"
+            >
+              <Keyboard className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Open Math Keypad</span>
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleVerifyDerivationFlow}
+          disabled={isAnalyzing}
+          className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-xs font-semibold text-white transition-colors min-h-[38px] flex items-center gap-1.5"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Checking Steps...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Check Steps</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Compact 1-Block AI Summary (Only shown after AI Check Steps is clicked) */}
+      {analysisResult && (
+        <div
+          className={`py-2.5 px-3 rounded-lg border text-xs sm:text-sm space-y-1 ${
+            analysisResult.overallStatus === "correct"
+              ? "bg-emerald-950/25 border-emerald-500/40 text-emerald-100"
+              : "bg-indigo-950/30 border-indigo-500/40 text-slate-200"
+          }`}
+        >
+          <div className="flex items-center justify-between font-mono text-xs">
+            <span className="font-bold text-white flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>{analysisResult.headline}</span>
+            </span>
+            <span className="text-emerald-400 font-bold">{analysisResult.scorePercent}%</span>
+          </div>
+          <div className="leading-relaxed text-xs text-slate-200">
+            <FormattedContent
+              content={
+                analysisResult.socraticHint ||
+                analysisResult.easyExplanation ||
+                analysisResult.nextHint
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Clean Unboxed Official Step-by-Step Solution (When Toggled) */}
+      {isEasyStepsOpen && (
+        <div className="pt-2 border-t border-slate-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold text-cyan-400 uppercase">
+              Reference Derivation ({officialSteps.length} Steps)
+            </span>
             <button
               type="button"
               onClick={() => setIsEasyStepsOpen(false)}
               className="text-xs font-mono text-slate-400 hover:text-white"
             >
-              Hide ✕
+              Close ✕
             </button>
           </div>
-
-          <div className="space-y-3">
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-              <span className="text-xs font-mono font-bold text-indigo-300 block">
-                Starting Formula:
-              </span>
-              <p className="text-xs sm:text-sm text-slate-300">
-                We start with the main law that connects what we are given to what we want to find:
-              </p>
-              <div className="py-2 px-3 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto">
-                <MathView math={governingFormula} displayMode={true} />
-              </div>
-            </div>
-
+          <div className="divide-y divide-slate-800/70 border-y border-slate-800">
             {officialSteps.map((s, idx) => (
-              <div
-                key={idx}
-                className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-bold text-cyan-300">
-                    Step {idx + 1}: {s.step}
+              <div key={idx} className="py-2.5 px-1 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-200">
+                    {idx + 1}. {s.step}
                   </span>
                   <button
                     type="button"
                     onClick={() => {
-                      const next = [...steps];
-                      next[Math.min(idx, next.length - 1)] = s.latex;
-                      setSteps(next);
+                      const target = focusedLineIdx ?? lines.length - 1;
+                      handleLineChange(target, s.latex);
                     }}
-                    className="text-[11px] font-mono text-indigo-300 hover:text-white px-2 py-0.5 rounded bg-indigo-950/60 border border-indigo-500/30"
+                    className="text-[11px] font-mono text-cyan-400 hover:underline"
                   >
-                    Use in My Step
+                    Copy to line
                   </button>
                 </div>
-
                 {s.explanation && (
-                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                    <strong className="text-slate-400">Why: </strong>
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     <FormattedContent content={s.explanation} />
                   </p>
                 )}
-
-                <div className="py-2 px-3 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto">
-                  <MathView math={s.latex} displayMode={true} />
+                <div className="overflow-x-auto py-0.5 text-slate-100">
+                  <MathView math={s.latex} displayMode={false} />
                 </div>
               </div>
             ))}
           </div>
-
-          {isLoadingEasyExplain ? (
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2 text-xs sm:text-sm text-slate-300">
-              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-              <span>AI Tutor is preparing a plain-English walkthrough...</span>
-            </div>
-          ) : (
-            aiEasyExplainText && (
-              <div className="p-4 rounded-xl bg-indigo-950/25 border border-indigo-500/40 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-indigo-300">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  <span>Plain-English AI Tutor Walkthrough:</span>
-                </div>
-                <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                  <FormattedContent content={aiEasyExplainText} />
-                </div>
-              </div>
-            )
-          )}
         </div>
+      )}
+
+      {/* DESMOS / PHOTOMATH-STYLE STICKY BOTTOM KEYPAD DOCK (Only appears when a line is focused) */}
+      {focusedLineIdx !== null && (
+        <MobileLaTeXInput
+          docked={true}
+          value={activeValue}
+          onChange={(newLatex) => handleLineChange(activeIdx, newLatex)}
+          cursorPos={activeCursor}
+          onCursorChange={(pos) =>
+            setCursorMap((prev) => ({ ...prev, [activeIdx]: pos }))
+          }
+          onNextLine={handleNextLine}
+          onCloseDock={() => setFocusedLineIdx(null)}
+          onSubmit={handleVerifyDerivationFlow}
+          label={`Line ${activeIdx + 1} · [${units}]`}
+          unitLabel={units}
+          governingFormula={governingFormula}
+        />
       )}
     </div>
   );

@@ -24,20 +24,12 @@ import { OfficialDocumentsViewer } from "./components/OfficialDocumentsViewer";
 import { PromptDirectory } from "./components/PromptDirectory";
 import { ScientificCalculator } from "./components/ScientificCalculator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { useSwipeGesture } from "./hooks/useSwipeGesture";
 import { 
   SHEET_1_MASTERCLASS, 
   SHEET_2_MASTERCLASS, 
   SHEET_3_MASTERCLASS, 
   SHEET_4_MASTERCLASS 
 } from "./lib/reflibData";
-
-const SHEET_ORDER: { id: NavMode; title: string; num: string }[] = [
-  { id: "sheet-1", title: "Quantum & Thermal", num: "1" },
-  { id: "sheet-2", title: "Wave Mechanics", num: "2" },
-  { id: "sheet-3", title: "Atomic Physics", num: "3" },
-  { id: "sheet-4", title: "Special Relativity", num: "4" },
-];
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavMode>("sheet-1");
@@ -47,7 +39,6 @@ export function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [examChapterId, setExamChapterId] = useState<ChapterId>("ch1");
-  const [swipeToast, setSwipeToast] = useState<{ text: string; direction: "next" | "prev" } | null>(null);
 
   const handleExecuteTrigger = (command: string) => {
     setActiveCommand(command);
@@ -60,35 +51,6 @@ export function App() {
   };
 
   const isSheetTab = currentTab.startsWith("sheet-");
-
-  // Mobile Touch Swipe Gesture handlers across sheets
-  const handleNextSheet = () => {
-    const currentIndex = SHEET_ORDER.findIndex((s) => s.id === currentTab);
-    if (currentIndex !== -1 && currentIndex < SHEET_ORDER.length - 1) {
-      const nextSheet = SHEET_ORDER[currentIndex + 1];
-      setCurrentTab(nextSheet.id);
-      setSwipeToast({ text: `Sheet ${nextSheet.num}: ${nextSheet.title}`, direction: "next" });
-      setTimeout(() => setSwipeToast(null), 1800);
-    }
-  };
-
-  const handlePrevSheet = () => {
-    const currentIndex = SHEET_ORDER.findIndex((s) => s.id === currentTab);
-    if (currentIndex > 0) {
-      const prevSheet = SHEET_ORDER[currentIndex - 1];
-      setCurrentTab(prevSheet.id);
-      setSwipeToast({ text: `Sheet ${prevSheet.num}: ${prevSheet.title}`, direction: "prev" });
-      setTimeout(() => setSwipeToast(null), 1800);
-    }
-  };
-
-  const { touchHandlers, swipeFeedback } = useSwipeGesture({
-    onSwipeLeft: handleNextSheet,
-    onSwipeRight: handlePrevSheet,
-    disabled: !isSheetTab,
-    minDistance: 45,
-    thresholdRatio: 1.25,
-  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden">
@@ -131,19 +93,10 @@ export function App() {
             }}
           />
 
-          {/* Main Content Workspace (extra bottom padding on mobile for the bottom navigation bar) */}
+          {/* Main Content Workspace (edge-friendly padding on mobile, no swipe conflict) */}
           <main 
-            {...touchHandlers}
-            className="main-workspace-container relative flex-1 p-3.5 sm:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-8 touch-pan-y"
+            className="main-workspace-container relative flex-1 px-2 py-2.5 sm:p-6 max-w-7xl w-full mx-auto pb-24 md:pb-8"
           >
-            {/* Native Mobile Swipe Indicator Toast */}
-            {swipeToast && (
-              <div className="fixed top-16 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-full bg-indigo-600 text-white text-xs font-semibold shadow-xl border border-indigo-400 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                <span>{swipeToast.direction === "next" ? "👉" : "👈"}</span>
-                <span>{swipeToast.text}</span>
-              </div>
-            )}
-
             {/* Quick 1-tap sheet switcher for mobile and tablets */}
             {isSheetTab && (
               <SheetQuickSwitcher

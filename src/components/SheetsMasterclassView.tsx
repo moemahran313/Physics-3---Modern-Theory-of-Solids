@@ -445,78 +445,89 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
       <div
         className={`${
           isExpanded ? "block" : "hidden print:block"
-        } p-3.5 sm:p-5 pt-2 border-t border-slate-800/80 bg-slate-950/60 space-y-4 text-xs sm:text-sm`}
+        } px-3 py-3 sm:p-5 border-t border-slate-800/80 bg-slate-950/50 space-y-3.5 text-xs sm:text-sm`}
       >
-        {/* Statement */}
-        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-100 leading-relaxed text-sm sm:text-base">
-          <span className="text-cyan-400 font-mono font-bold text-[11px] uppercase block mb-1">
-            Problem Statement:
-          </span>
+        {/* Statement (Unboxed for full mobile width) */}
+        <div className="text-slate-100 leading-relaxed text-sm sm:text-base">
           <FormattedContent content={problem.statement} />
         </div>
 
-        {/* Given & Required */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
-            <span className="text-[11px] font-bold text-indigo-300 uppercase font-mono block mb-1.5">
-              What Is Given:
-            </span>
-            <ul className="space-y-1.5 text-slate-200 font-mono text-xs sm:text-sm">
-              {problem.givenParameters.map((p, i) => (
-                <li key={i} className="flex items-center gap-2 overflow-x-auto">
-                  <span className="text-indigo-400 shrink-0">•</span>
-                  <MathView math={p} displayMode={false} />
-                </li>
-              ))}
-            </ul>
+        {/* Unboxed Given & Required Bar */}
+        <div className="py-2.5 border-y border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-indigo-400 font-bold uppercase text-[11px]">Given:</span>
+            {problem.givenParameters.map((p, i) => (
+              <span key={i} className="inline-flex items-center gap-1 text-slate-200">
+                <MathView math={p} displayMode={false} />
+              </span>
+            ))}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
-            <span className="text-[11px] font-bold text-cyan-300 uppercase font-mono block mb-1.5">
-              What We Want to Find:
-            </span>
-            <ul className="space-y-1.5 text-slate-200 font-mono text-xs sm:text-sm">
-              {problem.requiredAnswers.map((r, i) => (
-                <li key={i} className="flex items-center gap-2 overflow-x-auto">
-                  <span className="text-cyan-400 shrink-0">•</span>
-                  <MathView math={r} displayMode={false} />
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/50">
+            <span className="text-cyan-400 font-bold uppercase text-[11px]">Find:</span>
+            {problem.requiredAnswers.map((r, i) => (
+              <span key={i} className="inline-flex items-center gap-1 text-slate-100">
+                <MathView math={r} displayMode={false} />
+              </span>
+            ))}
           </div>
         </div>
 
-        {/* Toggle Practice Mode vs Easy Step Breakdown */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-900 border border-indigo-500/40">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span className="text-xs sm:text-sm font-semibold text-white">
-              Want to solve this step-by-step with AI hints & LaTeX pad?
-            </span>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* Clean Segmented Switcher: Solution Steps vs Interactive Notebook */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex p-1 rounded-lg bg-slate-900 border border-slate-800">
             <button
               type="button"
               onClick={() => {
-                setShowPracticePad((prev) => {
-                  const next = !prev;
-                  if (next) setShowSolutionSteps(false);
-                  else setShowSolutionSteps(true);
-                  return next;
-                });
+                setShowSolutionSteps(true);
+                setShowPracticePad(false);
               }}
-              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors min-h-[40px]"
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[34px] ${
+                showSolutionSteps && !showPracticePad
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
             >
-              {showPracticePad ? "Close Practice Pad" : "Practice Steps with AI"}
+              Step-by-Step Solution
             </button>
             <button
               type="button"
-              onClick={() => setShowSolutionSteps((prev) => !prev)}
-              className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors min-h-[40px]"
+              onClick={() => {
+                setShowPracticePad(true);
+                setShowSolutionSteps(false);
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors min-h-[34px] flex items-center gap-1.5 ${
+                showPracticePad
+                  ? "bg-indigo-600 text-white"
+                  : "text-cyan-300 hover:text-white"
+              }`}
             >
-              {showSolutionSteps ? "Hide Solution Steps" : "Show Easy Steps"}
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Practice Notebook</span>
             </button>
           </div>
+
+          {showSolutionSteps && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy(
+                  problem.officialSolution.calculationSteps
+                    .map((s) => `${s.step}: ${s.latex}`)
+                    .join("\n"),
+                  problem.id
+                );
+              }}
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 active:scale-95"
+            >
+              {copiedId === problem.id ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+              <span>{copiedId === problem.id ? "Copied" : "Copy"}</span>
+            </button>
+          )}
         </div>
 
         {/* Interactive Mobile LaTeX & AI Step Solver */}
@@ -538,82 +549,48 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
           />
         )}
 
-        {/* Easy Step-by-Step Solution Breakdown (Focused on Method & Steps) */}
+        {/* Clean Unboxed Step-by-Step Solution Breakdown (Hairline dividers, zero box-in-box) */}
         {showSolutionSteps && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-400 uppercase font-mono">
-                Easy Step-by-Step Breakdown (Focus on Method):
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCopy(
-                    problem.officialSolution.calculationSteps
-                      .map((s) => `${s.step}: ${s.latex}`)
-                      .join("\n"),
-                    problem.id
-                  );
-                }}
-                className="flex items-center gap-1 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 active:scale-95"
-              >
-                {copiedId === problem.id ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-                <span>{copiedId === problem.id ? "Copied" : "Copy Steps"}</span>
-              </button>
-            </div>
-
+          <div className="divide-y divide-slate-800/70 border-t border-slate-800">
             {/* Step 0: Starting Formula */}
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-              <span className="text-xs font-mono font-bold text-indigo-300 block">
-                Starting Formula:
+            <div className="py-2.5 space-y-1">
+              <span className="text-[11px] font-mono font-bold uppercase text-indigo-300 block">
+                Governing Law
               </span>
-              <div className="overflow-x-auto max-w-full py-1">
-                <MathView math={problem.officialSolution.governingFormula} displayMode={true} />
+              <div className="overflow-x-auto max-w-full py-0.5">
+                <MathView math={problem.officialSolution.governingFormula} displayMode={false} />
               </div>
             </div>
 
-            {/* Numbered Step Cards */}
-            <div className="space-y-2.5">
-              {problem.officialSolution.calculationSteps.map((s, idx) => (
-                <div
-                  key={idx}
-                  className="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold">
-                      Step {idx + 1}
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-white">{s.step}</span>
-                  </div>
-
-                  {s.note && (
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                      <FormattedContent content={s.note} />
-                    </p>
-                  )}
-
-                  <div className="py-2 px-3 rounded-lg bg-slate-950 border border-slate-800/80 overflow-x-auto max-w-full">
-                    <MathView math={s.latex} displayMode={true} />
-                  </div>
+            {/* Numbered Step Rows */}
+            {problem.officialSolution.calculationSteps.map((s, idx) => (
+              <div key={idx} className="py-2.5 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs sm:text-sm">
+                  <span className="font-mono text-cyan-400 font-bold">{idx + 1}.</span>
+                  <span className="font-semibold text-white">{s.step}</span>
                 </div>
-              ))}
-            </div>
+
+                {s.note && (
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-4">
+                    <FormattedContent content={s.note} />
+                  </p>
+                )}
+
+                <div className="pl-4 overflow-x-auto max-w-full py-0.5 text-slate-100">
+                  <MathView math={s.latex} displayMode={false} />
+                </div>
+              </div>
+            ))}
 
             {/* Exam Pitfall Warning */}
             {problem.pitfallWarning && (
-              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-200 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <span className="font-bold text-xs block uppercase font-mono text-rose-300">
-                    Common Mistake to Avoid:
-                  </span>
-                  <div className="text-xs sm:text-sm leading-relaxed">
-                    <FormattedContent content={problem.pitfallWarning} />
-                  </div>
+              <div className="pt-2.5 text-amber-300/95 flex items-start gap-2 text-xs sm:text-sm">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="font-mono text-xs uppercase text-amber-300 mr-1.5">
+                    Exam Trap:
+                  </strong>
+                  <FormattedContent content={problem.pitfallWarning} />
                 </div>
               </div>
             )}

@@ -229,3 +229,144 @@ export function evaluateStudentAnswer(
     diagnosticTip,
   };
 }
+
+export interface InstantStepCheck {
+  status: "empty" | "formula-match" | "value-correct" | "value-close" | "trap-warning" | "symbolic";
+  badgeText?: string;
+  inlineHint?: string;
+  scorePercent?: number;
+}
+
+/**
+ * Normalizes a LaTeX formula string for fast structural comparison (0ms).
+ */
+function normalizeFormulaSkeleton(latex: string): string {
+  return formatToCleanLatex(latex)
+    .replace(/\$/g, "")
+    .replace(/\\(?:left|right|displaystyle|text\{[^}]*\}|mathrm\{[^}]*\})/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[{}]/g, "")
+    .toLowerCase();
+}
+
+/**
+ * 0ms Instant Local Step Evaluator:
+ * Evaluates a single notebook line immediately in the browser without waiting for an API call.
+ * Checks if the line matches the governing formula, an official intermediate step,
+ * or the target numerical answer (including unit-trap diagnostics).
+ */
+export function evaluateNotebookStepLocally(
+  stepLatex: string,
+  governingFormula: string,
+  officialSteps: { step: string; latex: string; explanation?: string }[],
+  expectedValue: number | string,
+  units: string
+): InstantStepCheck {
+  const trimmed = stepLatex.trim();
+  if (!trimmed) {
+    return { status: "empty" };
+  }
+
+  const numExpected =
+    typeof expectedValue === "number" ? expectedValue : parseScientificInput(String(expectedValue));
+
+  // 1. Check if the line contains a numerical value that can be compared
+  const parsedNum = parseScientificInput(trimmed);
+  if (parsedNum !== null && numExpected !== null && !isNaN(numExpected)) {
+    const diff = Math.abs(parsedNum - numExpected);
+    const relDiff = numExpected !== 0 ? diff / Math.abs(numExpected) : diff;
+
+    if (relDiff <= 0.025) {
+      return {
+        status: "value-correct",
+        badgeText: `✓ Exact (${units})`,
+        scorePercent: 100,
+      };
+    }
+    if (relDiff <= 0.05) {
+      return {
+        status: "value-close",
+        badgeText: `≈ Close (${(relDiff * 100).toFixed(1)}%)`,
+        inlineHint: `Very close to ${numExpected} ${units} — check rounding of constants.`,
+        scorePercent: 85,
+      };
+    }
+
+    // Check if the number matches an intermediate number in officialSteps
+    for (const offStep of officialSteps) {
+      const offNum = parseScientificInput(offStep.latex);
+      if (offNum !== null && offNum !== 0) {
+        const stepRel = Math.abs(parsedNum - offNum) / Math.abs(offNum);
+        if (stepRel <= 0.03) {
+          return {
+            status: "formula-match",
+            badgeText: "✓ Step value OK",
+            scorePercent: 60,
+          };
+        }
+      }
+    }
+
+    // Check common unit/order-of-magnitude traps immediately
+    const ratio = numExpected !== 0 ? parsedNum / numExpected : 0;
+    if (Math.abs(ratio - 1e9) < 1e8 || Math.abs(ratio - 1e-9) < 1e-10) {
+      return {
+        status: "trap-warning",
+        badgeText: "×10⁹ Unit Shift",
+        inlineHint: `Off by 10⁹ — check nanometer (nm) ↔ meter (m) conversion (1 nm = 10⁻⁹ m).`,
+      };
+    }
+    if (Math.abs(ratio - 1e3) < 50 || Math.abs(ratio - 1e-3) < 0.00005) {
+      return {
+        status: "trap-warning",
+        badgeText: "×10³ Prefix Shift",
+        inlineHint: `Off by 10³ — check kW/mW/mm unit prefix conversion.`,
+      };
+    }
+    if (
+      Math.abs(parsedNum - (numExpected - 273.15)) < 5 ||
+      Math.abs(parsedNum - (numExpected + 273.15)) < 5
+    ) {
+      return {
+        status: "trap-warning",
+        badgeText: "°C vs K Trap",
+        inlineHint: `Convert temperature to Kelvin first: T(K) = T(°C) + 273.`,
+      };
+    }
+    if (Math.abs(ratio - 1.602e-19) < 1e-20 || Math.abs(ratio - 6.242e18) < 1e17) {
+      return {
+        status: "trap-warning",
+        badgeText: "eV ↔ J Shift",
+        inlineHint: `Check energy units: 1 eV = 1.6 × 10⁻¹⁹ J.`,
+      };
+    }
+  }
+
+  // 2. Check symbolic formula match against governingFormula or officialSteps
+  const studentSkel = normalizeFormulaSkeleton(trimmed);
+  const govSkel = normalizeFormulaSkeleton(governingFormula);
+
+  if (studentSkel.length >= 3) {
+    if (govSkel && (studentSkel === govSkel || govSkel.includes(studentSkel) || studentSkel.includes(govSkel))) {
+      return {
+        status: "formula-match",
+        badgeText: "✓ Law / Formula",
+        scorePercent: 50,
+      };
+    }
+
+    for (const offStep of officialSteps) {
+      const offSkel = normalizeFormulaSkeleton(offStep.latex);
+      if (offSkel && (studentSkel === offSkel || offSkel.includes(studentSkel))) {
+        return {
+          status: "formula-match",
+          badgeText: "✓ Valid Step",
+          scorePercent: 65,
+        };
+      }
+    }
+  }
+
+  return { status: "symbolic" };
+}
+

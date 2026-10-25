@@ -553,11 +553,11 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
         {/* Right Column: Mobile-First Question & AI Step Solver (8 cols on lg) */}
         <div className="lg:col-span-8 space-y-4">
           {currentQuestion ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl px-3 py-3.5 sm:p-6 shadow-xl space-y-4">
               {/* Question Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3.5 border-b border-slate-800">
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400">
+              <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-slate-400">
                     <span className="text-cyan-400 font-semibold">
                       {currentQuestion.officialSource}
                     </span>
@@ -573,88 +573,46 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
 
                 <button
                   onClick={handleToggleFlag}
-                  className={`self-start sm:self-center px-3 py-2 rounded-xl border text-xs font-medium transition-colors flex items-center gap-1.5 min-h-[40px] ${
+                  className={`shrink-0 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1 min-h-[36px] ${
                     isFlagged
                       ? "bg-cyan-950/80 border-cyan-500/80 text-cyan-300"
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
                   <Flag className="w-3.5 h-3.5" />
-                  <span>{isFlagged ? "Flagged" : "Flag"}</span>
+                  <span className="hidden sm:inline">{isFlagged ? "Flagged" : "Flag"}</span>
                 </button>
               </div>
 
-              {/* Problem Statement (Easy to Read on Mobile) */}
-              <div className="text-slate-100 text-sm sm:text-base leading-relaxed bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+              {/* Problem Statement (Unboxed, full-width legibility on mobile) */}
+              <div className="text-slate-100 text-sm sm:text-base leading-relaxed">
                 <FormattedContent content={currentQuestion.prompt} />
               </div>
 
-              {/* Given & What We Want to Find (Clean 2-Box Summary) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
-                  <span className="font-mono text-xs font-bold text-cyan-300 block">
-                    Given in Problem:
-                  </span>
-                  <div className="space-y-1.5">
-                    {currentQuestion.given.map((g, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between font-mono gap-2 text-xs sm:text-sm"
-                      >
-                        <span className="text-indigo-300 shrink-0">
-                          <MathView math={g.symbol} inline={true} /> =
-                        </span>
-                        <span className="text-slate-100 text-right overflow-x-auto">
-                          <FormattedContent content={g.value} />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Compact Unboxed Given & Target Bar (Hairline border, zero nested cards) */}
+              <div className="py-2.5 border-y border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono">
+                  <span className="text-cyan-400 font-bold uppercase text-[11px]">Given:</span>
+                  {currentQuestion.given.map((g, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1 text-slate-200">
+                      <span className="text-indigo-300">
+                        <MathView math={g.symbol} inline={true} /> =
+                      </span>
+                      <FormattedContent content={g.value} />
+                    </span>
+                  ))}
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
-                  <span className="font-mono text-xs font-bold text-amber-300 block">
-                    What to Find:
-                  </span>
-                  <div className="text-slate-100 font-medium text-xs sm:text-sm">
+                <div className="flex items-center gap-2 font-mono text-xs shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/50">
+                  <span className="text-amber-400 font-bold uppercase text-[11px]">Find:</span>
+                  <span className="text-slate-100">
                     <FormattedContent content={currentQuestion.targetUnknown} />
-                  </div>
-                  <div className="text-xs text-slate-400 font-mono">
-                    Target Unit: <strong className="text-cyan-400">[{currentQuestion.units}]</strong>
-                  </div>
+                  </span>
+                  <span className="text-cyan-400 font-bold">[{currentQuestion.units}]</span>
                 </div>
               </div>
 
-              {/* Quick Exam Tip & Common Trap (Concise & Friendly) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-amber-950/25 border border-amber-500/40 text-xs sm:text-sm space-y-1">
-                  <div className="flex items-center gap-1.5 text-amber-300 font-semibold font-mono text-xs">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>Watch Out For This Trap</span>
-                  </div>
-                  <div className="text-slate-200 leading-relaxed">
-                    <FormattedContent content={currentQuestion.pitfallWarning} />
-                  </div>
-                </div>
-
-                {currentQuestion.tips && currentQuestion.tips.length > 0 && (
-                  <div className="p-3.5 rounded-xl bg-indigo-950/25 border border-indigo-500/40 text-xs sm:text-sm space-y-1">
-                    <div className="flex items-center gap-1.5 text-cyan-300 font-semibold font-mono text-xs">
-                      <Lightbulb className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>Helpful Tip</span>
-                    </div>
-                    <ul className="space-y-1 pl-4 text-slate-200 list-disc">
-                      {currentQuestion.tips.map((tip, tIdx) => (
-                        <li key={tIdx} className="leading-relaxed">
-                          <FormattedContent content={tip} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* NEW: Mobile-First LaTeX Step-by-Step Solver & AI Step Analyzer */}
+              {/* Flat Physics Notebook & Instant 0ms / AI Step Solver */}
               <MobileStepSolver
                 problemId={currentQuestion.id}
                 problemTitle={currentQuestion.title}
@@ -668,67 +626,54 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                 onSaveWork={handleSaveStudentWork}
               />
 
-              {/* 3-Tier Progressive Hint Drawer */}
-              <div className="border-t border-slate-800 pt-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HelpCircle className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs sm:text-sm font-mono font-bold text-slate-300">
-                      Step-by-Step Hints ({activeHintTier}/3)
-                    </span>
+              {/* Compact Progressive Hints & Exam Trap Drawer (Unboxed hairline sections) */}
+              <div className="border-t border-slate-800 pt-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-amber-300/90">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <FormattedContent content={currentQuestion.pitfallWarning} />
                   </div>
+
                   {activeHintTier < 3 && (
                     <button
                       onClick={handleUnlockHint}
-                      className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-200 transition-colors min-h-[38px]"
+                      className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-amber-300 transition-colors min-h-[34px] shrink-0"
                     >
                       {activeHintTier === 0
-                        ? "Show Hint 1 (Formula)"
-                        : `Show Hint ${activeHintTier + 1}/3`}
+                        ? "Unlock Step Hint (1/3)"
+                        : `Next Hint (${activeHintTier + 1}/3)`}
                     </button>
                   )}
                 </div>
 
                 {activeHintTier >= 1 && (
-                  <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs sm:text-sm space-y-1">
-                    <span className="font-mono font-semibold text-amber-400 block">
-                      Hint 1 — Which Formula to Use:
-                    </span>
-                    <div className="text-slate-200 leading-relaxed">
+                  <div className="divide-y divide-slate-800/70 border-t border-slate-800/80 pt-1 text-xs sm:text-sm">
+                    <div className="py-2 text-slate-200">
+                      <span className="font-mono font-bold text-amber-400 mr-2">Hint 1:</span>
                       <FormattedContent content={currentQuestion.progressiveHints[0]} />
                     </div>
-                  </div>
-                )}
-
-                {activeHintTier >= 2 && (
-                  <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs sm:text-sm space-y-1">
-                    <span className="font-mono font-semibold text-amber-400 block">
-                      Hint 2 — Unit Conversions & Values:
-                    </span>
-                    <div className="text-slate-200 leading-relaxed">
-                      <FormattedContent content={currentQuestion.progressiveHints[1]} />
-                    </div>
-                  </div>
-                )}
-
-                {activeHintTier >= 3 && (
-                  <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs sm:text-sm space-y-1">
-                    <span className="font-mono font-semibold text-amber-400 block">
-                      Hint 3 — Full Substitution:
-                    </span>
-                    <div className="text-slate-200 leading-relaxed">
-                      <FormattedContent content={currentQuestion.progressiveHints[2]} />
-                    </div>
+                    {activeHintTier >= 2 && (
+                      <div className="py-2 text-slate-200">
+                        <span className="font-mono font-bold text-amber-400 mr-2">Hint 2:</span>
+                        <FormattedContent content={currentQuestion.progressiveHints[1]} />
+                      </div>
+                    )}
+                    {activeHintTier >= 3 && (
+                      <div className="py-2 text-slate-200">
+                        <span className="font-mono font-bold text-amber-400 mr-2">Hint 3:</span>
+                        <FormattedContent content={currentQuestion.progressiveHints[2]} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Navigation Bar (Previous / Next) */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800 gap-2">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-800 gap-2">
                 <button
                   disabled={safeIdx === 0}
                   onClick={() => setActiveQuestionIdx((prev) => Math.max(0, prev - 1))}
-                  className="px-4 py-3 rounded-xl bg-slate-950 hover:bg-slate-850 disabled:opacity-30 border border-slate-800 text-xs sm:text-sm font-medium text-slate-200 transition-colors flex items-center gap-1.5 min-h-[46px]"
+                  className="px-3.5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 disabled:opacity-30 border border-slate-800 text-xs sm:text-sm font-medium text-slate-200 transition-colors flex items-center gap-1.5 min-h-[44px]"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Prev</span>
@@ -745,7 +690,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                       Math.min(currentChapterQuestions.length - 1, prev + 1)
                     )
                   }
-                  className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-xs sm:text-sm font-semibold text-white transition-colors flex items-center gap-1.5 min-h-[46px]"
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-xs sm:text-sm font-semibold text-white transition-colors flex items-center gap-1.5 min-h-[44px]"
                 >
                   <span>Next Question</span>
                   <ChevronRight className="w-4 h-4" />
