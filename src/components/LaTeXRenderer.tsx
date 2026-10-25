@@ -66,10 +66,10 @@ export const LaTeXRenderer: React.FC<LaTeXRendererProps> = ({
 
   if (isBlock) {
     return (
-      <div className={`latex-display-container relative group my-2 sm:my-3 py-2 px-3 rounded-xl bg-slate-950/60 border border-slate-800/60 overflow-x-auto text-slate-100 font-mono tracking-wide leading-relaxed scrollbar-none select-text ${className}`}>
+      <div className={`latex-display-container relative group my-1.5 py-1.5 px-0 sm:px-2 overflow-x-auto text-slate-100 font-mono tracking-wide leading-relaxed scrollbar-none select-text ${className}`}>
         <button
           onClick={handleCopy}
-          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity absolute right-2 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] text-slate-400 hover:text-cyan-300 font-mono flex items-center gap-1 shadow"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity absolute right-1 top-1 px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700 text-[10px] text-slate-400 hover:text-cyan-300 font-mono flex items-center gap-1 shadow"
           title="Copy LaTeX source"
           aria-label="Copy LaTeX"
         >
@@ -176,7 +176,7 @@ export const FormattedContent: React.FC<{ content: string; className?: string }>
       // Check if line is block math $$ ... $$
       if (trimmed.startsWith("$$") && trimmed.endsWith("$$") && trimmed.length > 4) {
         return (
-          <div key={lineIdx} className="my-2.5 p-3 sm:p-4 rounded-xl bg-slate-950/90 border border-slate-800/90 shadow-inner overflow-x-auto print:border-slate-300 print:bg-slate-50">
+          <div key={lineIdx} className="my-1.5 overflow-x-auto max-w-full">
             <LaTeXRenderer math={trimmed} block={true} />
           </div>
         );

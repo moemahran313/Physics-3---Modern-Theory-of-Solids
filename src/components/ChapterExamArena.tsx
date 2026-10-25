@@ -225,31 +225,25 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
     CHAPTER_METADATA.find((m) => m.id === selectedChapterId) || CHAPTER_METADATA[0];
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Chapter Selection & Compact Mobile Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>AI Step-by-Step Examination Suite</span>
-            </div>
-            <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
-              Chapter Examination & Step Analyzer
+    <div className="space-y-3 sm:space-y-5">
+      {/* Flat Unified Header & Chapter Bar (Zero nested boxes) */}
+      <div className="border-b border-slate-800 pb-3 space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <h1 className="text-base sm:text-xl font-bold text-white tracking-tight truncate">
+              Chapter Exam & Step Analyzer
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300">
-              Write your steps and numbers in clean LaTeX—our AI engine checks every step, gives easy hints, and awards credit for your method.
-            </p>
           </div>
 
-          {/* Exam Stats & Timer HUD */}
-          <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 bg-slate-950/80 p-2.5 sm:p-3 rounded-xl border border-slate-800">
-            <div className="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-800 text-xs">
+          {/* Flat Unboxed HUD: Mode · Timer · Score · Reset */}
+          <div className="flex items-center gap-2 text-xs font-mono ml-auto">
+            <div className="inline-flex bg-slate-900 rounded-lg p-0.5 border border-slate-800">
               <button
                 onClick={() => setExamMode("study")}
-                className={`px-2.5 py-1.5 rounded-md transition-all min-h-[34px] ${
+                className={`px-2 py-1 rounded-md transition-colors ${
                   examMode === "study"
-                    ? "bg-indigo-600 text-white font-medium"
+                    ? "bg-indigo-600 text-white font-semibold"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -257,9 +251,9 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               </button>
               <button
                 onClick={() => setExamMode("strict")}
-                className={`px-2.5 py-1.5 rounded-md transition-all min-h-[34px] ${
+                className={`px-2 py-1 rounded-md transition-colors ${
                   examMode === "strict"
-                    ? "bg-rose-600 text-white font-medium"
+                    ? "bg-rose-600 text-white font-semibold"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -267,37 +261,33 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono">
+            <button
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 text-slate-200 hover:text-white"
+              title={isTimerRunning ? "Pause Timer" : "Resume Timer"}
+            >
               <Clock className="w-3.5 h-3.5 text-cyan-400" />
-              <span className={timerSeconds < 300 ? "text-rose-400 font-bold" : "text-slate-200"}>
+              <span className={timerSeconds < 300 ? "text-rose-400 font-bold" : ""}>
                 {formatTimer(timerSeconds)}
               </span>
-              <button
-                onClick={() => setIsTimerRunning(!isTimerRunning)}
-                className="text-slate-400 hover:text-white ml-0.5 p-1"
-                title={isTimerRunning ? "Pause Timer" : "Resume Timer"}
-              >
-                {isTimerRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-              </button>
-            </div>
+              {isTimerRunning ? <Pause className="w-3 h-3 text-slate-400" /> : <Play className="w-3 h-3 text-emerald-400" />}
+            </button>
 
-            <div className="text-right pl-2 border-l border-slate-800 text-xs font-mono">
-              <div className="text-emerald-400 font-bold">
-                {totalEarnedPoints.toFixed(1)}/{totalPossiblePoints} pts ({percentScore}%)
-              </div>
-            </div>
+            <span className="text-emerald-400 font-bold">
+              {totalEarnedPoints.toFixed(1)}/{totalPossiblePoints} ({percentScore}%)
+            </span>
 
             {confirmingReset ? (
-              <div className="flex items-center gap-1">
+              <div className="inline-flex items-center gap-1">
                 <button
                   onClick={handleResetChapter}
-                  className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-[11px] font-mono font-bold text-white"
+                  className="px-2 py-1 rounded bg-rose-600 text-[11px] font-bold text-white"
                 >
-                  Reset
+                  Confirm
                 </button>
                 <button
                   onClick={() => setConfirmingReset(false)}
-                  className="px-2 py-1 rounded-lg bg-slate-800 text-[11px] font-mono text-slate-300"
+                  className="px-1.5 py-1 rounded bg-slate-800 text-[11px] text-slate-300"
                 >
                   ✕
                 </button>
@@ -305,7 +295,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
             ) : (
               <button
                 onClick={() => setConfirmingReset(true)}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
                 title="Reset Chapter Progress"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -314,103 +304,83 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
           </div>
         </div>
 
-        {/* Chapter Switcher Tabs (Horizontal Scroll on Mobile, 4-Grid on Desktop) */}
-        <div className="mt-3.5 pt-3.5 border-t border-slate-800/80 flex lg:grid lg:grid-cols-4 gap-2 overflow-x-auto scrollbar-none pb-1">
+        {/* Streamlined Chapter Tabs + Mobile Question Strip in One Flat Control Area */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           {CHAPTER_METADATA.map((chap) => {
             const isSelected = chap.id === selectedChapterId;
             const chapQuestions = CHAPTER_EXAM_QUESTIONS.filter((q) => q.chapterId === chap.id);
             const chapEvals = Object.keys(evaluations).filter((qId) =>
               chapQuestions.some((q) => q.id === qId)
             );
-            const isComplete =
-              chapEvals.length === chapQuestions.length && chapQuestions.length > 0;
+            const shortTitle = chap.title.split(":")[1]?.trim() || chap.title;
 
             return (
               <button
                 key={chap.id}
                 onClick={() => handleSelectChapter(chap.id)}
-                className={`min-w-[165px] sm:min-w-[200px] lg:min-w-0 p-3 rounded-xl border text-left transition-all shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 min-h-[36px] ${
                   isSelected
-                    ? "bg-indigo-950/60 border-indigo-500/80 shadow-md text-white"
-                    : "bg-slate-950/60 border-slate-800/80 hover:bg-slate-800/60 text-slate-300"
+                    ? "bg-indigo-600 text-white font-semibold"
+                    : "bg-slate-900 text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className={isSelected ? "text-cyan-300 font-semibold" : "text-slate-400"}>
-                    Sheet {chap.sheetNumber}
-                  </span>
-                  {isComplete && (
-                    <span className="text-emerald-400 flex items-center gap-0.5 text-[11px]">
-                      <Check className="w-3 h-3" /> Done
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs sm:text-sm font-semibold truncate mt-0.5">
-                  {chap.title.split(":")[1]?.trim() || chap.title}
-                </div>
-                <div className="text-[11px] text-slate-400 flex items-center justify-between mt-1 font-mono">
-                  <span>{chapQuestions.length} Qs</span>
-                  <span>
-                    {chapEvals.length}/{chapQuestions.length} Done
-                  </span>
-                </div>
+                <span className="font-mono">Ch {chap.sheetNumber}:</span>
+                <span>{shortTitle}</span>
+                <span
+                  className={`font-mono text-[11px] ${
+                    isSelected ? "text-indigo-200" : "text-slate-500"
+                  }`}
+                >
+                  ({chapEvals.length}/{chapQuestions.length})
+                </span>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* MOBILE-FIRST QUICK QUESTION STRIP (Visible on phones/tablets so the question is immediately accessible without scrolling!) */}
-      <div className="lg:hidden bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-mono font-bold text-slate-300">
-            Question {safeIdx + 1} of {currentChapterQuestions.length}
-          </span>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={onOpenConstants}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-cyan-300 font-medium min-h-[36px]"
-            >
-              Constants
-            </button>
-            <button
-              onClick={() => setIsMobileGridOpen(!isMobileGridOpen)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 font-medium min-h-[36px] flex items-center gap-1"
-            >
-              <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{isMobileGridOpen ? "Hide Grid" : "All Qs"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Swipeable Horizontal Pill Bar for Quick Mobile Jumping */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-          {currentChapterQuestions.map((q, idx) => {
-            const isCurrent = idx === safeIdx;
-            const ev = evaluations[q.id];
-            let btnStyle = "bg-slate-950 border-slate-800 text-slate-400";
-            if (ev) {
-              if (ev.status === "correct") {
-                btnStyle = "bg-emerald-950/70 border-emerald-500/80 text-emerald-300 font-bold";
-              } else if (ev.status === "near-miss") {
-                btnStyle = "bg-indigo-950/70 border-indigo-400/80 text-indigo-200 font-bold";
-              } else {
-                btnStyle = "bg-amber-950/70 border-amber-500/80 text-amber-300 font-bold";
+        {/* Mobile Quick Question Number Strip (Flat inline row, no extra box wrapper) */}
+        <div className="lg:hidden flex items-center gap-1.5 pt-1">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 py-0.5">
+            {currentChapterQuestions.map((q, idx) => {
+              const isCurrent = idx === safeIdx;
+              const ev = evaluations[q.id];
+              let btnStyle = "bg-slate-900 text-slate-400";
+              if (ev) {
+                if (ev.status === "correct") {
+                  btnStyle = "bg-emerald-950/80 text-emerald-300 font-bold";
+                } else if (ev.status === "near-miss") {
+                  btnStyle = "bg-indigo-950/80 text-indigo-200 font-bold";
+                } else {
+                  btnStyle = "bg-amber-950/80 text-amber-300 font-bold";
+                }
               }
-            }
-            if (isCurrent) {
-              btnStyle += " ring-2 ring-cyan-400 text-white";
-            }
-            return (
-              <button
-                key={q.id}
-                onClick={() => setActiveQuestionIdx(idx)}
-                className={`min-w-[42px] min-h-[42px] rounded-xl border text-xs font-mono shrink-0 flex items-center justify-center transition-all ${btnStyle}`}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
+              if (isCurrent) {
+                btnStyle = "bg-cyan-500 text-slate-950 font-bold";
+              }
+              return (
+                <button
+                  key={q.id}
+                  onClick={() => setActiveQuestionIdx(idx)}
+                  className={`min-w-[36px] h-[34px] rounded-lg text-xs font-mono shrink-0 flex items-center justify-center transition-colors ${btnStyle}`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={onOpenConstants}
+            className="px-2.5 h-[34px] rounded-lg bg-slate-900 text-xs text-cyan-300 font-mono shrink-0"
+          >
+            Const
+          </button>
+          <button
+            onClick={() => setIsMobileGridOpen(!isMobileGridOpen)}
+            className="px-2.5 h-[34px] rounded-lg bg-slate-900 text-xs text-slate-300 font-mono shrink-0 flex items-center gap-1"
+          >
+            <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
+          </button>
         </div>
       </div>
 
@@ -420,42 +390,43 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
         <div
           className={`${
             isMobileGridOpen ? "block" : "hidden lg:block"
-          } lg:col-span-4 space-y-4`}
+          } lg:col-span-3 space-y-4`}
         >
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-3">
+          <div className="sm:bg-slate-900 sm:border sm:border-slate-800 sm:rounded-xl sm:p-4 space-y-3 border-b border-slate-800 pb-3 sm:pb-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Question Navigator</h3>
-              </div>
-              <span className="text-xs font-mono text-slate-400">
-                {safeIdx + 1} of {currentChapterQuestions.length}
+              <span className="text-xs font-mono font-bold uppercase text-slate-300">
+                Questions ({safeIdx + 1}/{currentChapterQuestions.length})
               </span>
+              <button
+                onClick={() => setIsReportOpen(true)}
+                className="text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Scorecard</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 pt-1">
+            <div className="grid grid-cols-6 lg:grid-cols-4 gap-1.5">
               {currentChapterQuestions.map((q, idx) => {
                 const isCurrent = idx === safeIdx;
                 const ev = evaluations[q.id];
                 const flagged = flaggedQuestions[q.id];
 
-                let bgClass =
-                  "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700";
+                let bgClass = "bg-slate-900 text-slate-400 hover:text-white";
                 if (ev) {
                   if (ev.status === "correct") {
-                    bgClass =
-                      "bg-emerald-950/60 border-emerald-500/80 text-emerald-300 font-bold";
+                    bgClass = "bg-emerald-950/70 text-emerald-300 font-bold";
                   } else if (ev.status === "near-miss") {
-                    bgClass = "bg-indigo-950/60 border-indigo-500/80 text-indigo-300 font-bold";
+                    bgClass = "bg-indigo-950/70 text-indigo-300 font-bold";
                   } else {
-                    bgClass = "bg-amber-950/60 border-amber-500/80 text-amber-300 font-bold";
+                    bgClass = "bg-amber-950/70 text-amber-300 font-bold";
                   }
                 } else if (userInputs[q.id] || (userSteps[q.id] && userSteps[q.id][0])) {
-                  bgClass = "bg-slate-800 border-slate-700 text-slate-200";
+                  bgClass = "bg-slate-800 text-slate-200";
                 }
 
                 if (isCurrent) {
-                  bgClass += " ring-2 ring-cyan-400 shadow-md";
+                  bgClass += " ring-2 ring-cyan-400 text-white";
                 }
 
                 return (
@@ -465,7 +436,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                       setActiveQuestionIdx(idx);
                       setIsMobileGridOpen(false);
                     }}
-                    className={`relative p-2 rounded-xl border text-center transition-all min-h-[44px] flex flex-col items-center justify-center ${bgClass}`}
+                    className={`relative h-[38px] rounded-lg text-center transition-all flex items-center justify-center ${bgClass}`}
                   >
                     <span className="text-xs font-mono">{idx + 1}</span>
                     {flagged && (
@@ -476,33 +447,10 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               })}
             </div>
 
-            <div className="pt-3 border-t border-slate-800 text-[11px] grid grid-cols-2 gap-1.5 text-slate-400 font-mono">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/80"></span>
-                <span>Full Credit (100%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500/80"></span>
-                <span>Step Credit (50-85%)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/80"></span>
-                <span>In Progress</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-slate-700"></span>
-                <span>Draft Saved</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Support Utilities */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-2">
-            <h4 className="text-xs font-mono font-bold text-slate-400">Exam Support Utilities</h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-800/80">
               <button
                 onClick={onOpenConstants}
-                className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-200 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="py-2 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-xs font-medium text-slate-200 flex items-center justify-center gap-1.5 min-h-[38px]"
               >
                 <FileText className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Constants</span>
@@ -510,7 +458,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               {onOpenCalculator && (
                 <button
                   onClick={onOpenCalculator}
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-200 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                  className="py-2 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-xs font-medium text-slate-200 flex items-center justify-center gap-1.5 min-h-[38px]"
                 >
                   <Calculator className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Calculator</span>
@@ -520,29 +468,21 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
 
             <button
               onClick={() => setIsScratchpadOpen(!isScratchpadOpen)}
-              className="w-full p-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-200 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+              className="w-full py-2 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-xs font-medium text-slate-300 flex items-center justify-center gap-1.5 min-h-[38px]"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>{isScratchpadOpen ? "Hide Scratchpad" : "Open LaTeX Scratchpad"}</span>
+              <span>{isScratchpadOpen ? "Hide Scratchpad" : "LaTeX Scratchpad"}</span>
             </button>
 
             {onNavigateToSheet && (
               <button
                 onClick={() => onNavigateToSheet(currentChapterMeta.sheetNumber)}
-                className="w-full p-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-medium text-slate-300 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="w-full py-2 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-xs font-medium text-slate-300 flex items-center justify-center gap-1.5 min-h-[38px]"
               >
                 <Bookmark className="w-3.5 h-3.5 text-emerald-400" />
-                <span>View Sheet {currentChapterMeta.sheetNumber} Masterclass Notes</span>
+                <span>Sheet {currentChapterMeta.sheetNumber} Notes</span>
               </button>
             )}
-
-            <button
-              onClick={() => setIsReportOpen(true)}
-              className="w-full p-2.5 rounded-xl bg-indigo-900/40 hover:bg-indigo-900/70 border border-indigo-700/50 text-xs font-semibold text-indigo-200 transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
-            >
-              <Award className="w-3.5 h-3.5 text-indigo-300" />
-              <span>Generate Performance Scorecard</span>
-            </button>
           </div>
 
           {isScratchpadOpen && (
@@ -550,12 +490,12 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
           )}
         </div>
 
-        {/* Right Column: Mobile-First Question & AI Step Solver (8 cols on lg) */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Right Column: Full-Width Edge-to-Edge on Mobile, Clean Surface on Desktop (9 cols on lg) */}
+        <div className="lg:col-span-9">
           {currentQuestion ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl px-3 py-3.5 sm:p-6 shadow-xl space-y-4">
+            <div className="sm:bg-slate-900 sm:border sm:border-slate-800 sm:rounded-2xl sm:p-6 space-y-3.5">
               {/* Question Header */}
-              <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
+              <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-800">
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-slate-400">
                     <span className="text-cyan-400 font-semibold">
@@ -573,10 +513,10 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
 
                 <button
                   onClick={handleToggleFlag}
-                  className={`shrink-0 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1 min-h-[36px] ${
+                  className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 min-h-[34px] ${
                     isFlagged
-                      ? "bg-cyan-950/80 border-cyan-500/80 text-cyan-300"
-                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                      ? "bg-cyan-950 text-cyan-300"
+                      : "bg-slate-900 text-slate-400 hover:text-white"
                   }`}
                 >
                   <Flag className="w-3.5 h-3.5" />
@@ -584,14 +524,14 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                 </button>
               </div>
 
-              {/* Problem Statement (Unboxed, full-width legibility on mobile) */}
-              <div className="text-slate-100 text-sm sm:text-base leading-relaxed">
+              {/* Problem Statement (100% full mobile width, zero wrapper padding) */}
+              <div className="text-slate-100 text-sm sm:text-base leading-relaxed overflow-x-auto">
                 <FormattedContent content={currentQuestion.prompt} />
               </div>
 
-              {/* Compact Unboxed Given & Target Bar (Hairline border, zero nested cards) */}
-              <div className="py-2.5 border-y border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono">
+              {/* Unboxed Given & Target Row (Full width, hairline border) */}
+              <div className="py-2 border-y border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs sm:text-sm overflow-x-auto">
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono">
                   <span className="text-cyan-400 font-bold uppercase text-[11px]">Given:</span>
                   {currentQuestion.given.map((g, idx) => (
                     <span key={idx} className="inline-flex items-center gap-1 text-slate-200">
@@ -603,7 +543,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2 font-mono text-xs shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800/50">
+                <div className="flex items-center gap-1.5 font-mono text-xs shrink-0">
                   <span className="text-amber-400 font-bold uppercase text-[11px]">Find:</span>
                   <span className="text-slate-100">
                     <FormattedContent content={currentQuestion.targetUnknown} />
@@ -612,7 +552,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                 </div>
               </div>
 
-              {/* Flat Physics Notebook & Instant 0ms / AI Step Solver */}
+              {/* Edge-to-Edge Physics Notebook & Instant 0ms / AI Step Solver */}
               <MobileStepSolver
                 problemId={currentQuestion.id}
                 problemTitle={currentQuestion.title}
@@ -627,20 +567,22 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               />
 
               {/* Compact Progressive Hints & Exam Trap Drawer (Unboxed hairline sections) */}
-              <div className="border-t border-slate-800 pt-3 space-y-2">
+              <div className="border-t border-slate-800 pt-2.5 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-amber-300/90">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <FormattedContent content={currentQuestion.pitfallWarning} />
+                  <div className="flex items-start gap-1.5 text-xs font-mono text-amber-300/90 min-w-0 flex-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="overflow-x-auto">
+                      <FormattedContent content={currentQuestion.pitfallWarning} />
+                    </div>
                   </div>
 
                   {activeHintTier < 3 && (
                     <button
                       onClick={handleUnlockHint}
-                      className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-amber-300 transition-colors min-h-[34px] shrink-0"
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-mono text-amber-300 transition-colors min-h-[32px] shrink-0"
                     >
                       {activeHintTier === 0
-                        ? "Unlock Step Hint (1/3)"
+                        ? "Step Hint (1/3)"
                         : `Next Hint (${activeHintTier + 1}/3)`}
                     </button>
                   )}
@@ -648,18 +590,18 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
 
                 {activeHintTier >= 1 && (
                   <div className="divide-y divide-slate-800/70 border-t border-slate-800/80 pt-1 text-xs sm:text-sm">
-                    <div className="py-2 text-slate-200">
+                    <div className="py-2 text-slate-200 overflow-x-auto">
                       <span className="font-mono font-bold text-amber-400 mr-2">Hint 1:</span>
                       <FormattedContent content={currentQuestion.progressiveHints[0]} />
                     </div>
                     {activeHintTier >= 2 && (
-                      <div className="py-2 text-slate-200">
+                      <div className="py-2 text-slate-200 overflow-x-auto">
                         <span className="font-mono font-bold text-amber-400 mr-2">Hint 2:</span>
                         <FormattedContent content={currentQuestion.progressiveHints[1]} />
                       </div>
                     )}
                     {activeHintTier >= 3 && (
-                      <div className="py-2 text-slate-200">
+                      <div className="py-2 text-slate-200 overflow-x-auto">
                         <span className="font-mono font-bold text-amber-400 mr-2">Hint 3:</span>
                         <FormattedContent content={currentQuestion.progressiveHints[2]} />
                       </div>
@@ -673,7 +615,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                 <button
                   disabled={safeIdx === 0}
                   onClick={() => setActiveQuestionIdx((prev) => Math.max(0, prev - 1))}
-                  className="px-3.5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-850 disabled:opacity-30 border border-slate-800 text-xs sm:text-sm font-medium text-slate-200 transition-colors flex items-center gap-1.5 min-h-[44px]"
+                  className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-xs sm:text-sm font-medium text-slate-200 transition-colors flex items-center gap-1.5 min-h-[42px]"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Prev</span>
@@ -690,7 +632,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
                       Math.min(currentChapterQuestions.length - 1, prev + 1)
                     )
                   }
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-xs sm:text-sm font-semibold text-white transition-colors flex items-center gap-1.5 min-h-[44px]"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-xs sm:text-sm font-semibold text-white transition-colors flex items-center gap-1.5 min-h-[42px]"
                 >
                   <span>Next Question</span>
                   <ChevronRight className="w-4 h-4" />
@@ -698,7 +640,7 @@ export const ChapterExamArena: React.FC<ChapterExamArenaProps> = ({
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 text-sm">
+            <div className="py-8 text-center text-slate-400 text-sm">
               No questions found for this chapter.
             </div>
           )}
